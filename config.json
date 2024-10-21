@@ -13,7 +13,7 @@
         {
           "name": "Alt Text Generator",
           "desc": "Generate image alt texts in PDF document",
-          "program": "docker run --platform linux/amd64 -v ${working_directory}:/data -w /data --rm pdfix/alt-text-vision:latest --name \"${license_name}\" --key \"${license_key}\" detect --input \"${input_pdf}\" -o \"/data/${output_pdf}\""
+          "program": "docker run --platform linux/amd64 -v \"${working_directory}:/data\" -w /data --rm pdfix/alt-text-vision:latest --name \"${license_name}\" --key \"${license_key}\" detect --input \"${input_pdf}\" -o \"/data/${output_pdf}\""
         }
       ],
       "args": [
