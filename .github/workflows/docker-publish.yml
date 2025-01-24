@@ -10,7 +10,7 @@ on:
 
 env:
   DOCKER_HUB_NAMESPACE: pdfix
-  DOCKER_HUB_REPOSITORY: generate-alt-text-vision
+  DOCKER_HUB_REPOSITORY: generate-alternate-text-vision
 jobs:
   push_to_registry:
     name: Push Docker image to Docker Hub
