@@ -1,36 +1,30 @@
 {
-  "actions": [
-    {
-      "name": "Generator Alternate Text",
-      "desc": "A Docker image that automatically generates and applies alternative image descriptions to PDF files",
-      "version": "v1.0.0",
-      "icon": "add_photo_alternate",
-      "category": "Tags",
-      "configurations": [
+    "actions": [
         {
-          "name": "Generate Alt Text",
-          "desc": "Generate image alt texts in PDF document",
-          "program": "docker run --platform linux/amd64 -v \"${working_directory}:/data\" -w /data --rm pdfix/generate-alternate-text-vision:latest --name \"${license_name}\" --key \"${license_key}\" detect --input \"${input_pdf}\" -o \"/data/${output_pdf}\""
+            "version": "v1.0.0",
+            "icon": "add_photo_alternate",
+            "category": "Tags",
+            "name": "Generate Alt Text with Vision",
+            "desc": "Generate alternate text in PDF document",
+            "program": "docker run --platform linux/amd64 -v \"${working_directory}:/data\" -w /data --rm pdfix/generate-alternate-text-vision:latest --name \"${license_name}\" --key \"${license_key}\" detect --input \"${input_pdf}\" -o \"/data/${output_pdf}\"",
+            "args": [
+                {
+                    "name": "input_pdf",
+                    "desc": "Input PDF file",
+                    "flags": 2,
+                    "type": "file_path",
+                    "ext": "pdf",
+                    "value": ""
+                },
+                {
+                    "name": "output_pdf",
+                    "desc": "Output PDF file.",
+                    "flags": 4,
+                    "type": "file_path",
+                    "ext": "pdf",
+                    "value": ""
+                }
+            ]
         }
-      ],
-      "args": [
-        {
-          "name": "input_pdf",
-          "desc": "Input PDF file",
-          "flags": 2,
-          "type": "file_path",
-          "ext": "pdf",
-          "value": ""
-        },
-        {
-          "name": "output_pdf",
-          "desc": "Output PDF file.",
-          "flags": 4,
-          "type": "file_path",
-          "ext": "pdf",
-          "value": ""
-        }
-      ]
-    }
-  ]
+    ]
 }
