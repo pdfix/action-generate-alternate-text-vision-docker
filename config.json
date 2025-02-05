@@ -1,10 +1,10 @@
 {
     "actions": [
         {
+            "name": "Generate Alternate Text Vision",
             "version": "v1.0.0",
-            "icon": "add_photo_alternate",
+            "icon": "add_photo_alternate_vision",
             "category": "Tags",
-            "name": "Generate Alt Text with Vision",
             "desc": "Generate alternate text in PDF document",
             "program": "docker run --platform linux/amd64 -v \"${working_directory}:/data\" -w /data --rm pdfix/generate-alternate-text-vision:latest --name \"${license_name}\" --key \"${license_key}\" detect --input \"${input_pdf}\" -o \"/data/${output_pdf}\"",
             "args": [
