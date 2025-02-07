@@ -1,8 +1,9 @@
 {
+    "version": "v0.0.0",
     "actions": [
         {
             "name": "Generate Alternate Text Vision",
-            "version": "v1.0.0",
+            "version": "v0.0.0",
             "icon": "add_photo_alternate_vision",
             "category": "Tags",
             "desc": "Automatically generates and applies alternate descriptions in PDF tags using VisionAI",
