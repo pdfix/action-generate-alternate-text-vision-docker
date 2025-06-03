@@ -8,7 +8,7 @@
             "icon": "add_photo_alternate_vision",
             "category": "Tags",
             "desc": "Automatically generates and applies alternate descriptions in PDF tags using VisionAI",
-            "program": "docker run --platform linux/amd64 -v \"${working_directory}:/data\" -w /data --rm pdfix/generate-alternate-text-vision:latest --name \"${license_name}\" --key \"${license_key}\" detect --input \"${input_pdf}\" -o \"/data/${output_pdf}\"",
+            "program": "docker run --platform linux/amd64 -v \"${working_directory}:/data\" -w /data --rm pdfix/generate-alternate-text-vision:latest detect -i \"${input_pdf}\" -o \"/data/${output_pdf}\"",
             "args": [
                 {
                     "name": "input_pdf",
