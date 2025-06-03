@@ -1,61 +1,29 @@
-import ctypes  # noqa: I001
-
-from vision import alt_description
-
 from pdfixsdk.Pdfix import (
     GetPdfix,
     PdfDoc,
-    PdfImageParams,
-    PdfPageRenderParams,
+    Pdfix,
     PdfRect,
     PdsDictionary,
     PdsStructElement,
-    kImageDIBFormatArgb,
-    kImageFormatJpg,
     kPdsStructChildElement,
-    kRotate0,
     kSaveFull,
 )
 
-
-def render_page(doc: PdfDoc, page_num: int, bbox: PdfRect, zoom: float) -> bytearray:
-    page = doc.AcquirePage(page_num)
-    page_view = page.AcquirePageView(zoom, kRotate0)
-
-    rect = page_view.RectToDevice(bbox)
-
-    # render content
-    render_params = PdfPageRenderParams()
-    render_params.matrix = page_view.GetDeviceMatrix()
-    render_params.clip_box = bbox
-    render_params.image = GetPdfix().CreateImage(
-        rect.right - rect.left,
-        rect.bottom - rect.top,
-        kImageDIBFormatArgb,
-    )
-    page.DrawContent(render_params)
-
-    # save image to stream and data
-    stm = GetPdfix().CreateMemStream()
-    img_params = PdfImageParams()
-    img_params.format = kImageFormatJpg
-    render_params.image.SaveToStream(stm, img_params)
-
-    data = bytearray(stm.GetSize())
-    raw_data = (ctypes.c_ubyte * len(data)).from_buffer(data)
-    stm.Read(0, raw_data, len(data))
-
-    # cleanup
-    stm.Destroy()
-    render_params.image.Destroy()
-    page_view.Release()
-    page.Release()
-
-    return data
+from page_renderer import render_part_of_page
+from vision import generate_alt_text_description
 
 
-def update_image_alt(elem: PdsStructElement, doc: PdfDoc, overwrite: bool) -> None:
-    img = "image_" + str(elem.GetObject().GetId()) + ".jpg"
+def update_image_alt(pdfix: Pdfix, elem: PdsStructElement, doc: PdfDoc, overwrite: bool) -> None:
+    """
+    For given image tag element generate alt text description using vision.
+
+    Args:
+        pdfix (Pdfix): Pdfix SDK.
+        elem (PdsStructElement): Image element to generate alt text for.
+        doc (PdfDoc): PDF document.
+        overwrite (bool): Should original alt text be overwritten?
+    """
+    image_name = f"image_{elem.GetObject().GetId()}.jpg"
 
     # get image bbox from attributes
     bbox = PdfRect()
@@ -72,7 +40,7 @@ def update_image_alt(elem: PdsStructElement, doc: PdfDoc, overwrite: bool) -> No
 
     # check bounding box
     if bbox.left == bbox.right or bbox.top == bbox.bottom:
-        print("[" + img + "] image found but no BBox attribute was set")
+        print(f"[{image_name}] image found but no BBox attribute was set")
         return
 
     # get the object page number (it may be written in child objects)
@@ -83,23 +51,33 @@ def update_image_alt(elem: PdsStructElement, doc: PdfDoc, overwrite: bool) -> No
             if page_num != -1:
                 break
     if page_num == -1:
-        print("[" + img + "] image found but can't determine the page number")
+        print(f"[{image_name}] image found but can't determine the page number")
         return
 
-    data = render_page(doc, page_num, bbox, 1)
-    with open(img, "wb") as bf:
+    data = render_part_of_page(pdfix, doc, page_num, bbox, 1)
+    with open(image_name, "wb") as bf:
         bf.write(data)
 
-    response = alt_description(img)
+    # Use AI to get alt description
+    response = generate_alt_text_description(image_name)
 
-    alt = response[0]
-    org_alt = elem.GetAlt()
+    alt_text_by_vission = response[0]
+    original_alt_text = elem.GetAlt()
 
-    if overwrite or not org_alt:
-        elem.SetAlt(alt)
+    if overwrite or not original_alt_text:
+        elem.SetAlt(alt_text_by_vission)
 
 
-def browse_figure_tags(parent: PdsStructElement, doc: PdfDoc, overwrite: bool) -> None:
+def browse_figure_tags(pdfix: Pdfix, parent: PdsStructElement, doc: PdfDoc, overwrite: bool) -> None:
+    """
+    Browse tagged tree and find figure tags. Run on them generate alt text description.
+
+    Args:
+        pdfix (Pdfix): Pdfix SDK.
+        parent (PdsStructElement): Parent element.
+        doc (PdfDoc): PDF document.
+        overwrite (bool): Should alt text be overwritten.
+    """
     count = parent.GetNumChildren()
     struct_tree = doc.GetStructTree()
     for i in range(0, count):
@@ -108,45 +86,54 @@ def browse_figure_tags(parent: PdsStructElement, doc: PdfDoc, overwrite: bool) -
         child_elem = struct_tree.GetStructElementFromObject(parent.GetChildObject(i))
         if child_elem.GetType(True) == "Figure":
             # process figure element
-            update_image_alt(child_elem, doc, overwrite)
+            update_image_alt(pdfix, child_elem, doc, overwrite)
         else:
-            browse_figure_tags(child_elem, doc, overwrite)
-
-    return
+            browse_figure_tags(pdfix, child_elem, doc, overwrite)
 
 
-def alt_text(
+def authorize_sdk(pdfix: Pdfix, license_name: str, license_key: str) -> None:
+    """
+    Tries to authorize or activate Pdfix license.
+
+    Args:
+        pdfix (Pdfix): Pdfix sdk instance.
+        license_name (string): Pdfix sdk license name (e-mail)
+        license_key (string): Pdfix sdk license key
+    """
+
+    if license_name and license_key:
+        authorization = pdfix.GetAccountAuthorization()
+        if not authorization.Authorize(license_name, license_key):
+            raise Exception(str(pdfix.GetError()))
+    elif license_key:
+        if not pdfix.GetStandarsAuthorization().Activate(license_key):
+            raise Exception(str(pdfix.GetError()))
+    else:
+        print("No license name or key provided. Using PDFix SDK trial")
+
+
+def detect_image_and_generate_alt_text(
     input_path: str,
     output_path: str,
     license_name: str,
     license_key: str,
     overwrite: bool,
 ) -> None:
-    """Run OCR using Tesseract.
+    """
+    Run detect images and on those images run vission generate alt text.
 
-    Parameters
-    ----------
-    input_path : str
-        Input path to the PDF file.
-    output_path : str
-        Output path for saving the PDF file.
-    license_name : str
-        Pdfix SDK license name.
-    license_key : str
-        Pdfix SDK license key.
-    overwrite : bool
-        Overwrite alternate text if already present.
-
+    Args:
+        input_path (str): Input path to the PDF file.
+        output_path (str): Output path for saving the PDF file.
+        license_name (str): Pdfix SDK license name.
+        license_key (str): Pdfix SDK license key.
+        overwrite (bool): Overwrite alternate text if already present.
     """
     pdfix = GetPdfix()
     if pdfix is None:
         raise Exception("Pdfix Initialization fail")
 
-    if license_name and license_key:
-        if not pdfix.GetAccountAuthorization().Authorize(license_name, license_key):
-            raise Exception("Pdfix Authorization fail")
-    else:
-        print("No license name or key provided. Using Pdfix trial")
+    authorize_sdk(pdfix, license_name, license_key)
 
     # Open doc
     doc = pdfix.OpenDoc(input_path, "")
@@ -159,7 +146,7 @@ def alt_text(
 
     child_elem = struct_tree.GetStructElementFromObject(struct_tree.GetChildObject(0))
     try:
-        browse_figure_tags(child_elem, doc, overwrite)
+        browse_figure_tags(pdfix, child_elem, doc, overwrite)
     except Exception as e:
         raise e
 

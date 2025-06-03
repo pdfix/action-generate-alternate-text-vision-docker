@@ -1,69 +1,126 @@
 import argparse
 import os
-import shutil
 import sys
+import traceback
 from pathlib import Path
 
-from process_pdf import alt_text
+from process_pdf import detect_image_and_generate_alt_text
 
 
-def get_config(path: str) -> None:
-    if path is None:
-        with open(
-            os.path.join(Path(__file__).parent.absolute(), "../config.json"),
-            "r",
-            encoding="utf-8",
-        ) as f:
-            print(f.read())
-    else:
-        src = os.path.join(Path(__file__).parent.absolute(), "../config.json")
-        dst = path
-        shutil.copyfile(src, dst)
+def set_arguments(
+    parser: argparse.ArgumentParser,
+    names: list,
+    required_output: bool = True,
+    output_help: str = "",
+) -> None:
+    """
+    Set arguments for the parser based on the provided names and options.
+
+    Args:
+        parser (argparse.ArgumentParser): The argument parser to set arguments for.
+        names (list): List of argument names to set.
+        required_output (bool): Whether the output argument is required. Defaults to True.
+        output_help (str): Help shown for --output argument. Defaults to "".
+    """
+    for name in names:
+        match name:
+            case "input":
+                parser.add_argument("--input", "-i", type=str, required=True, help="The input PDF file")
+            case "key":
+                parser.add_argument("--key", type=str, help="PDFix license key")
+            case "name":
+                parser.add_argument("--name", type=str, help="PDFix license name")
+            case "output":
+                parser.add_argument("--output", "-o", type=str, required=required_output, help=output_help)
+            case "overwrite":
+                parser.add_argument(
+                    "--overwrite",
+                    action="store_true",
+                    required=False,
+                    default=False,
+                    help="Overwrite alternate text if already present in the tag",
+                )
+
+
+def run_config_subcommand(args) -> None:
+    get_pdfix_config(args.output)
+
+
+def get_pdfix_config(path: str) -> None:
+    """
+    If Path is not provided, output content of config.
+    If Path is provided, copy config to destination path.
+
+    Args:
+        path (string): Destination path for config.json file
+    """
+    config_path = os.path.join(Path(__file__).parent.absolute(), "../config.json")
+
+    with open(config_path, "r", encoding="utf-8") as file:
+        if path is None:
+            print(file.read())
+        else:
+            with open(path, "w") as out:
+                out.write(file.read())
+
+
+def run_detect_subcommand(args) -> None:
+    input_file = args.input
+
+    if not os.path.isfile(input_file):
+        raise Exception(f"Error: The input file '{input_file}' does not exist.")
+
+    output_file = args.output
+
+    if not input_file.lower().endswith(".pdf") or not output_file.lower().endswith(".pdf"):
+        raise Exception("Input and output file must be PDF")
+
+    detect(input_file, output_file, args.name, args.key, args.overwrite)
+
+
+def detect(input_file: str, output_file: str, license_name: str, license_key: str, overwrite: bool) -> None:
+    """
+    Run image detect and use vission to generate alternate text description for images.
+
+    Args:
+        input_file (str): Path to PDF document.
+        output_file (str): Path to PDF document.
+        license_name (str): Name used in authorization in PDFix-SDK.
+        license_key (str): Key used in authorization in PDFix-SDK.
+        overwrite (bool): TODO
+    """
+    detect_image_and_generate_alt_text(input_file, output_file, license_name, license_key, overwrite)
 
 
 def main() -> None:
     parser = argparse.ArgumentParser(
-        description="Process a PDF or image file with Tesseract OCR",
+        description="Process a PDF file with Vission to generate alt text",
     )
-    parser.add_argument("--name", type=str, default="", help="Pdfix license name")
-    parser.add_argument("--key", type=str, default="", help="Pdfix license key")
 
     subparsers = parser.add_subparsers(dest="subparser")
 
-    # get config subparser
-    pars_config = subparsers.add_parser(
+    # Config subparser
+    config_subparser = subparsers.add_parser(
         "config",
         help="Extract config file for integration",
     )
-    pars_config.add_argument(
-        "-o",
-        "--output",
-        type=str,
-        help="Output to save the config JSON file. Application output\
-              is used if not provided",
+    set_arguments(
+        config_subparser,
+        ["output"],
+        False,
+        "Output to save the config JSON file. Application output is used if not provided",
     )
+    config_subparser.set_defaults(func=run_config_subcommand)
 
-    pars_detect = subparsers.add_parser(
+    # Detect subparser
+    detect_subparser = subparsers.add_parser(
         "detect",
         help="Run alternate text description",
     )
+    set_arguments(detect_subparser, ["name", "key", "input", "output", "overwrite"], True, "The output PDF file")
+    detect_subparser.set_defaults(func=run_detect_subcommand)
 
-    pars_detect.add_argument("-i", "--input", type=str, help="The input PDF file")
-    pars_detect.add_argument(
-        "-o",
-        "--output",
-        type=str,
-        help="The output PDF file",
-    )
-
-    pars_detect.add_argument(
-        "--overwrite",
-        action="store_true",
-        required=False,
-        default=False,
-        help="Overwrite alternate text if already present in the tag",
-    )
-
+    # Parse arguments
     try:
         args = parser.parse_args()
     except SystemExit as e:
@@ -72,31 +129,13 @@ def main() -> None:
         print("Failed to parse arguments. Please check the usage and try again.")
         sys.exit(1)
 
-    if args.subparser == "config":
-        get_config(args.output)
-        sys.exit(0)
-
-    elif args.subparser == "detect":
-        if not args.input or not args.output:
-            parser.error(
-                "The following arguments are required: -i/--input, -o/--output ",
-            )
-
-        input_file = args.input
-        output_file = args.output
-
-        if not os.path.isfile(input_file):
-            sys.exit(f"Error: The input file '{input_file}' does not exist.")
-            return
-
-        if input_file.lower().endswith(".pdf") and output_file.lower().endswith(".pdf"):
-            try:
-                alt_text(input_file, output_file, args.name, args.key, args.overwrite)
-            except Exception as e:
-                sys.exit("Failed to run alternate description: {}".format(e))
-
-        else:
-            print("Input and output file must be PDF")
+    # Run subcommand
+    try:
+        args.func(args)
+    except Exception as e:
+        print(traceback.format_exc(), file=sys.stderr)
+        print(f"Failed to run the program: {e}", file=sys.stderr)
+        sys.exit(1)
 
 
 if __name__ == "__main__":
