@@ -63,7 +63,7 @@ jobs:
       - name: Install Python dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install transformers==4.43.3 torch==2.6.0
+          pip install -r requirements.txt
 
       - name: Download model data into ./model
         run: |
