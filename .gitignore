@@ -8,5 +8,10 @@ env/
 venv/
 .env/
 
+# Testing directories and files
 .test
 image*
+
+# Directories for model downloaded
+model
+models

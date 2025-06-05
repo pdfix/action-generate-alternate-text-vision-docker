@@ -1,3 +1,6 @@
+import os
+from pathlib import Path
+
 import torch
 from PIL import Image
 from transformers import AutoTokenizer, VisionEncoderDecoderModel, ViTImageProcessor
@@ -13,14 +16,10 @@ def generate_alt_text_description(image_path: str) -> list[str]:
     Returns:
         List of possible texts.
     """
-    # Select models
-    model = VisionEncoderDecoderModel.from_pretrained(
-        "nlpconnect/vit-gpt2-image-captioning",
-    )
-    feature_extractor = ViTImageProcessor.from_pretrained(
-        "nlpconnect/vit-gpt2-image-captioning",
-    )
-    tokenizer = AutoTokenizer.from_pretrained("nlpconnect/vit-gpt2-image-captioning")
+    model_path = "./model"
+    model = VisionEncoderDecoderModel.from_pretrained(model_path)
+    feature_extractor = ViTImageProcessor.from_pretrained(model_path)
+    tokenizer = AutoTokenizer.from_pretrained(model_path)
 
     # Select device and assign it
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
