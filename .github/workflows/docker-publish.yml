@@ -55,12 +55,12 @@ jobs:
           images: ${{ env.DOCKER_HUB_NAMESPACE }}/${{ env.DOCKER_HUB_REPOSITORY }}
           tags: ${{ env.tag }}
 
-      - name: Run tests
-        run: chmod +x test.sh && ./test.sh
-
       - name: Download model data into ./model
         run: |
           mkdir -p ./model && python download_models.py && mv ./models/models--nlpconnect--vit-gpt2-image-captioning/snapshots/*/* ./model
+
+      - name: Run tests
+        run: chmod +x test.sh && ./test.sh
 
       - name: Build and push Docker image
         id: push
