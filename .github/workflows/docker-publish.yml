@@ -83,6 +83,19 @@ jobs:
           docker container prune -f
           docker image prune -a -f
 
+      - name: Clean up python dependencies and cache and python
+        run: |
+          pip uninstall -y -r requirements.txt || true
+          rm -rf ~/.cache/pip
+          sudo apt-get remove -y python3 || true
+
+      - name: Clean up github runners (that is not used for this build)
+        run: |
+          sudo rm -rf /usr/share/dotnet \
+              /opt/ghc \
+              /usr/local/lib/android \
+              /usr/lib/jvm
+
       - name: Build and push Docker image
         id: push
         uses: docker/build-push-action@v6
