@@ -87,7 +87,7 @@ def detect(input_file: str, output_file: str, license_name: str, license_key: st
         output_file (str): Path to PDF document.
         license_name (str): Name used in authorization in PDFix-SDK.
         license_key (str): Key used in authorization in PDFix-SDK.
-        overwrite (bool): TODO
+        overwrite (bool): Overwrite alternate text if already present.
     """
     detect_image_and_generate_alt_text(input_file, output_file, license_name, license_key, overwrite)
 
@@ -127,15 +127,18 @@ def main() -> None:
         if e.code == 0:  # This happens when --help is used, exit gracefully
             sys.exit(0)
         print("Failed to parse arguments. Please check the usage and try again.")
-        sys.exit(1)
+        sys.exit(e.code)
 
-    # Run subcommand
-    try:
-        args.func(args)
-    except Exception as e:
-        print(traceback.format_exc(), file=sys.stderr)
-        print(f"Failed to run the program: {e}", file=sys.stderr)
-        sys.exit(1)
+    if hasattr(args, "func"):
+        # Run subcommand
+        try:
+            args.func(args)
+        except Exception as e:
+            print(traceback.format_exc(), file=sys.stderr)
+            print(f"Failed to run the program: {e}", file=sys.stderr)
+            sys.exit(1)
+    else:
+        parser.print_help()
 
 
 if __name__ == "__main__":

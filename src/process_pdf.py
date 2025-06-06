@@ -5,15 +5,60 @@ from pdfixsdk.Pdfix import (
     PdfRect,
     PdsDictionary,
     PdsStructElement,
-    kPdsStructChildElement,
     kSaveFull,
 )
 
+from exceptions import PdfixException
 from page_renderer import render_part_of_page
+from utils_sdk import authorize_sdk, browse_tags_recursive
 from vision import generate_alt_text_description
 
 
-def update_image_alt(pdfix: Pdfix, elem: PdsStructElement, doc: PdfDoc, overwrite: bool) -> None:
+def detect_image_and_generate_alt_text(
+    input_path: str,
+    output_path: str,
+    license_name: str,
+    license_key: str,
+    overwrite: bool,
+) -> None:
+    """
+    Run detect images and on those images run vission generate alt text.
+
+    Args:
+        input_path (str): Input path to the PDF file.
+        output_path (str): Output path for saving the PDF file.
+        license_name (str): Pdfix SDK license name.
+        license_key (str): Pdfix SDK license key.
+        overwrite (bool): Overwrite alternate text if already present.
+    """
+    pdfix = GetPdfix()
+    if pdfix is None:
+        raise Exception("Pdfix Initialization fail")
+
+    authorize_sdk(pdfix, license_name, license_key)
+
+    # Open doc
+    doc = pdfix.OpenDoc(input_path, "")
+    if doc is None:
+        raise PdfixException(pdfix, "Unable to open pdf")
+
+    struct_tree = doc.GetStructTree()
+    if struct_tree is None:
+        raise PdfixException(pdfix, "PDF has no structure tree")
+
+    child_element = struct_tree.GetStructElementFromObject(struct_tree.GetChildObject(0))
+    try:
+        items = browse_tags_recursive(child_element, "Figure")
+        for element in items:
+            process_image(pdfix, element, doc, overwrite)
+    except Exception:
+        raise
+
+    if not doc.Save(output_path, kSaveFull):
+        raise PdfixException("Unable to save PDF ")
+
+
+def process_image(pdfix: Pdfix, elem: PdsStructElement, doc: PdfDoc, overwrite: bool) -> None:
     """
     For given image tag element generate alt text description using vision.
 
@@ -66,89 +111,3 @@ def update_image_alt(pdfix: Pdfix, elem: PdsStructElement, doc: PdfDoc, overwrit
 
     if overwrite or not original_alt_text:
         elem.SetAlt(alt_text_by_vission)
-
-
-def browse_figure_tags(pdfix: Pdfix, parent: PdsStructElement, doc: PdfDoc, overwrite: bool) -> None:
-    """
-    Browse tagged tree and find figure tags. Run on them generate alt text description.
-
-    Args:
-        pdfix (Pdfix): Pdfix SDK.
-        parent (PdsStructElement): Parent element.
-        doc (PdfDoc): PDF document.
-        overwrite (bool): Should alt text be overwritten.
-    """
-    count = parent.GetNumChildren()
-    struct_tree = doc.GetStructTree()
-    for i in range(0, count):
-        if parent.GetChildType(i) != kPdsStructChildElement:
-            continue
-        child_elem = struct_tree.GetStructElementFromObject(parent.GetChildObject(i))
-        if child_elem.GetType(True) == "Figure":
-            # process figure element
-            update_image_alt(pdfix, child_elem, doc, overwrite)
-        else:
-            browse_figure_tags(pdfix, child_elem, doc, overwrite)
-
-
-def authorize_sdk(pdfix: Pdfix, license_name: str, license_key: str) -> None:
-    """
-    Tries to authorize or activate Pdfix license.
-
-    Args:
-        pdfix (Pdfix): Pdfix sdk instance.
-        license_name (string): Pdfix sdk license name (e-mail)
-        license_key (string): Pdfix sdk license key
-    """
-
-    if license_name and license_key:
-        authorization = pdfix.GetAccountAuthorization()
-        if not authorization.Authorize(license_name, license_key):
-            raise Exception(str(pdfix.GetError()))
-    elif license_key:
-        if not pdfix.GetStandarsAuthorization().Activate(license_key):
-            raise Exception(str(pdfix.GetError()))
-    else:
-        print("No license name or key provided. Using PDFix SDK trial")
-
-
-def detect_image_and_generate_alt_text(
-    input_path: str,
-    output_path: str,
-    license_name: str,
-    license_key: str,
-    overwrite: bool,
-) -> None:
-    """
-    Run detect images and on those images run vission generate alt text.
-
-    Args:
-        input_path (str): Input path to the PDF file.
-        output_path (str): Output path for saving the PDF file.
-        license_name (str): Pdfix SDK license name.
-        license_key (str): Pdfix SDK license key.
-        overwrite (bool): Overwrite alternate text if already present.
-    """
-    pdfix = GetPdfix()
-    if pdfix is None:
-        raise Exception("Pdfix Initialization fail")
-
-    authorize_sdk(pdfix, license_name, license_key)
-
-    # Open doc
-    doc = pdfix.OpenDoc(input_path, "")
-    if doc is None:
-        raise Exception("Unable to open pdf : " + str(pdfix.GetError()))
-
-    struct_tree = doc.GetStructTree()
-    if struct_tree is None:
-        raise Exception("PDF has no structure tree : " + str(pdfix.GetError()))
-
-    child_elem = struct_tree.GetStructElementFromObject(struct_tree.GetChildObject(0))
-    try:
-        browse_figure_tags(pdfix, child_elem, doc, overwrite)
-    except Exception as e:
-        raise e
-
-    if not doc.Save(output_path, kSaveFull):
-        raise Exception("Unable to save PDF " + str(pdfix.GetError()))
