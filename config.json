@@ -4,7 +4,7 @@
     "actions": [
         {
             "title": "Generate Alternate Text Vision",
-            "name": "pdfix-generate_alt_text_vision",
+            "name": "pdfix_generate_alt_text_vision",
             "version": "v0.0.0",
             "icon": "add_photo_alternate_vision",
             "category": "Tags",
