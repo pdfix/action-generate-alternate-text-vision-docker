@@ -2,19 +2,12 @@
 FROM python:3.12-slim
 
 # Update system and Install python3 and necessary dependencies
-# RUN apt-get update && \
-#     apt-get install -y \
-#     python3-pip \
-#     python3-venv \
-#     && apt-get clean \
-#     && rm -rf /var/lib/apt/lists/*
-
-# Step by step to find out which is problematic
-RUN apt-get update
-RUN apt-get install -y python3-pip
-RUN apt-get install -y python3-venv
-RUN apt-get clean
-RUN rm -rf /var/lib/apt/lists/*
+RUN apt-get update && \
+    apt-get install -y \
+    python3-pip \
+    python3-venv \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /usr/alt-desc/
 
