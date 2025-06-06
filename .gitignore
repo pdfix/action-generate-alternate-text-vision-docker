@@ -10,7 +10,7 @@ venv/
 
 # Testing directories and files
 .test
-image*
+*.jpg
 
 # Directories for model downloaded
 model

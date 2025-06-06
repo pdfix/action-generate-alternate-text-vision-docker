@@ -25,14 +25,13 @@ COPY config.json /usr/alt-desc/
 COPY src/ /usr/alt-desc/src/
 
 
-# Copy script to download models into container and run it
-COPY download_models.py /usr/alt-desc/
-
 # no longer run inside container as layer gets too big
+# Copy script to download models into container and run it
+# COPY download_models.py /usr/alt-desc/
 # RUN venv/bin/python3 download_models.py
 
 # Copy models data that we moved from original snapshot location
-COPY model /usr/alt-desc/src/model
+COPY model/ /usr/alt-desc/src/model
 
 
 # Set Hugging Face environment variable to avoid online fetch

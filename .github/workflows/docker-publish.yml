@@ -69,7 +69,8 @@ jobs:
         run: |
           mkdir -p ./model
           python download_models.py
-          mv ./models/models--nlpconnect--vit-gpt2-image-captioning/snapshots/*/* ./model
+          cp -L ./models/models--nlpconnect--vit-gpt2-image-captioning/snapshots/*/* ./model
+          rm -rf ./models
 
       - name: Run tests
         run: chmod +x test.sh && ./test.sh
