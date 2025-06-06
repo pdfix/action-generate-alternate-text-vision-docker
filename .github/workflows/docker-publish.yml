@@ -75,6 +75,14 @@ jobs:
       - name: Run tests
         run: chmod +x test.sh && ./test.sh
 
+      - name: Clean all that can be cleaned for Docker
+        run: |
+          docker system prune -a --volumes -f
+          docker buildx prune --all --force
+          docker builder prune --all --force
+          docker container prune -f
+          docker image prune -a -f
+
       - name: Build and push Docker image
         id: push
         uses: docker/build-push-action@v6
