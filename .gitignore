@@ -1,14 +1,29 @@
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode
+.idea/
+
+# Cached file for image update check
+.local_data.json
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
-.vscode
+*.py[cod]
+*$py.class
 
-build/
-dist/
+# Environments
+.env
+.venv
 env/
 venv/
-.env/
+ENV/
+env.bak/
+venv.bak/
 
-# Testing directories and files
+# Testing related
 .test
 *.jpg
 

@@ -4,6 +4,7 @@ import sys
 import traceback
 from pathlib import Path
 
+from image_update import DockerImageContainerUpdateChecker
 from process_pdf import detect_image_and_generate_alt_text
 
 
@@ -128,6 +129,10 @@ def main() -> None:
             sys.exit(0)
         print("Failed to parse arguments. Please check the usage and try again.")
         sys.exit(e.code)
+
+    # Update of docker image checker
+    update_checker = DockerImageContainerUpdateChecker()
+    update_checker.check_for_image_updates()
 
     if hasattr(args, "func"):
         # Run subcommand
