@@ -1,3 +1,5 @@
+import os
+
 from pdfixsdk.Pdfix import (
     GetPdfix,
     PdfDoc,
@@ -103,11 +105,16 @@ def process_image(pdfix: Pdfix, elem: PdsStructElement, doc: PdfDoc, overwrite: 
     with open(image_name, "wb") as bf:
         bf.write(data)
 
-    # Use AI to get alt description
-    response = generate_alt_text_description(image_name)
+    try:
+        # Use AI to get alt description
+        response = generate_alt_text_description(image_name)
 
-    alt_text_by_vission = response[0]
-    original_alt_text = elem.GetAlt()
+        alt_text_by_vission = response[0]
+        original_alt_text = elem.GetAlt()
 
-    if overwrite or not original_alt_text:
-        elem.SetAlt(alt_text_by_vission)
+        if overwrite or not original_alt_text:
+            elem.SetAlt(alt_text_by_vission)
+    except Exception:
+        raise
+    finally:
+        os.remove(image_name)
