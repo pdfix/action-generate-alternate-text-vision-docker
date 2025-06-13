@@ -1,6 +1,6 @@
 pillow==10.4.0
 pdfix-sdk==8.2.0
 requests==2.32.4
-torch==2.6.0
-transformers==4.43.3
+torch==2.7.1
+transformers==4.50.0
 types-requests==2.32.0.20250515

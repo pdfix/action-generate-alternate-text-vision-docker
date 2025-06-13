@@ -14,9 +14,9 @@ def generate_alt_text_description(image_path: str) -> list[str]:
         List of possible texts.
     """
     model_path = "./model"
-    model = VisionEncoderDecoderModel.from_pretrained(model_path)
-    feature_extractor = ViTImageProcessor.from_pretrained(model_path)
-    tokenizer = AutoTokenizer.from_pretrained(model_path)
+    model = VisionEncoderDecoderModel.from_pretrained(model_path, local_files_only=True)
+    feature_extractor = ViTImageProcessor.from_pretrained(model_path, local_files_only=True)
+    tokenizer = AutoTokenizer.from_pretrained(model_path, local_files_only=True)
 
     # Select device and assign it
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
