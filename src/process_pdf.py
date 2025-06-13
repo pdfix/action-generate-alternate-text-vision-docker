@@ -16,7 +16,7 @@ from utils_sdk import authorize_sdk, browse_tags_recursive
 from vision import generate_alt_text_description
 
 
-def detect_image_and_generate_alt_text(
+def generate_alt_texts_in_pdf(
     input_path: str,
     output_path: str,
     license_name: str,

@@ -3,13 +3,13 @@
     "version": "v0.0.0",
     "actions": [
         {
-            "title": "Generate Alternate Text Vision",
-            "name": "pdfix_generate_alt_text_vision",
+            "title": "Generate Alternate Text (Vision)",
+            "name": "pdfix_generate_alternate_text_vision",
             "version": "v0.0.0",
             "icon": "add_photo_alternate_vision",
             "category": "Tags",
-            "desc": "Automatically generates and applies alternate descriptions in PDF tags using VisionAI",
-            "program": "docker run --platform linux/amd64 -v \"${working_directory}:/data\" -w /data --rm pdfix/generate-alternate-text-vision:latest detect -i \"${input_pdf}\" -o \"/data/${output_pdf}\"",
+            "desc": "Automatically generates alternate text for Figure tags using Vision, embedding it into each figure's Alt attribute.",
+            "program": "docker run --platform linux/amd64 -v \"${working_directory}:/data\" -w /data --rm pdfix/generate-alternate-text-vision:latest generate-alt-text -i \"${input_pdf}\" -o \"/data/${output_pdf}\" --overwrite \"${overwrite}\" --name \"${license_name}\" --key \"${license_key}\"",
             "args": [
                 {
                     "name": "input_pdf",
@@ -25,6 +25,41 @@
                     "flags": 4,
                     "type": "file_path",
                     "ext": "pdf",
+                    "value": ""
+                },
+                {
+                    "title": "Overwrite",
+                    "desc": "Replace the alternate text if it exists",
+                    "name": "overwrite",
+                    "type": "bool",
+                    "value": false
+                }
+            ]
+        },
+        {
+            "title": "Generate Alternate Text from Image to Text (Vision)",
+            "name": "pdfix_generate_alternate_text_from_image_to_text_vision",
+            "version": "v0.0.0",
+            "subtype": "generate_alt_text_img_to_txt",
+            "icon": "add_photo_alternate_vision",
+            "category": "Tags",
+            "desc": "Automatically generates alternate text from an image file using Vision, saving the description to a text file.",
+            "program": "docker run --platform linux/amd64 -v \"${working_directory}:/data\" -w /data --rm pdfix/generate-alternate-text-vision:latest generate-alt-text -i \"${input_img}\" -o \"/data/${output_txt}\"",
+            "args": [
+                {
+                    "name": "input_img",
+                    "desc": "Input image file containing picture",
+                    "flags": 2,
+                    "type": "file_path",
+                    "ext": "img",
+                    "value": ""
+                },
+                {
+                    "name": "output_txt",
+                    "desc": "Output TXT file containing alt text",
+                    "flags": 4,
+                    "type": "file_path",
+                    "ext": "txt",
                     "value": ""
                 }
             ]

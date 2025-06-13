@@ -1,12 +1,15 @@
 import argparse
 import os
+import re
 import sys
 import threading
 import traceback
 from pathlib import Path
 
+from constants import IMAGE_FILE_EXT_REGEX, SUPPORTED_IMAGE_EXT
 from image_update import DockerImageContainerUpdateChecker
-from process_pdf import detect_image_and_generate_alt_text
+from process_image import generate_alt_text_into_txt
+from process_pdf import generate_alt_texts_in_pdf
 
 
 def set_arguments(
@@ -66,32 +69,33 @@ def get_pdfix_config(path: str) -> None:
                 out.write(file.read())
 
 
-def run_detect_subcommand(args) -> None:
-    input_file = args.input
-
-    if not os.path.isfile(input_file):
-        raise Exception(f"Error: The input file '{input_file}' does not exist.")
-
-    output_file = args.output
-
-    if not input_file.lower().endswith(".pdf") or not output_file.lower().endswith(".pdf"):
-        raise Exception("Input and output file must be PDF")
-
-    detect(input_file, output_file, args.name, args.key, args.overwrite)
+def run_generate_alt_text_subcommand(args) -> None:
+    generate_alt_text(args.input, args.output, args.name, args.key, args.overwrite)
 
 
-def detect(input_file: str, output_file: str, license_name: str, license_key: str, overwrite: bool) -> None:
+def generate_alt_text(input_file: str, output_file: str, license_name: str, license_key: str, overwrite: bool) -> None:
     """
     Run image detect and use vission to generate alternate text description for images.
 
     Args:
-        input_file (str): Path to PDF document.
-        output_file (str): Path to PDF document.
+        input_file (str): Path to PDF or image.
+        output_file (str): Path to PDF or TXT.
         license_name (str): Name used in authorization in PDFix-SDK.
         license_key (str): Key used in authorization in PDFix-SDK.
         overwrite (bool): Overwrite alternate text if already present.
     """
-    detect_image_and_generate_alt_text(input_file, output_file, license_name, license_key, overwrite)
+    if not os.path.isfile(input_file):
+        raise Exception(f"Error: The input file '{input_file}' does not exist.")
+
+    if not input_file.lower().endswith(".pdf") or not output_file.lower().endswith(".pdf"):
+        raise Exception("Input and output file must be PDF")
+
+    if input_file.lower().endswith(".pdf") and output_file.lower().endswith(".pdf"):
+        generate_alt_texts_in_pdf(input_file, output_file, license_name, license_key, overwrite)
+    elif re.search(IMAGE_FILE_EXT_REGEX, input_file, re.IGNORECASE) and output_file.lower().endswith(".txt"):
+        generate_alt_text_into_txt(input_file, output_file)
+    else:
+        raise Exception("No allowed input output file combination. Please see --help.")
 
 
 def main() -> None:
@@ -114,13 +118,16 @@ def main() -> None:
     )
     config_subparser.set_defaults(func=run_config_subcommand)
 
-    # Detect subparser
-    detect_subparser = subparsers.add_parser(
-        "detect",
-        help="Run alternate text description",
+    # Generate alternate text images subparser
+    generate_alt_text_help = "Run alternate text description."
+    generate_alt_text_help += " Runs in 2 modes. First mode is PDF -> PDF."
+    generate_alt_text_help += " Second mode is image file -> TXT."
+    generate_alt_text_help += f" Allowed image types: {SUPPORTED_IMAGE_EXT}"
+    generate_alt_text_subparser = subparsers.add_parser("generate-alt-text", help=generate_alt_text_help)
+    set_arguments(
+        generate_alt_text_subparser, ["name", "key", "input", "output", "overwrite"], True, "The output PDF or TXT file"
     )
-    set_arguments(detect_subparser, ["name", "key", "input", "output", "overwrite"], True, "The output PDF file")
-    detect_subparser.set_defaults(func=run_detect_subcommand)
+    generate_alt_text_subparser.set_defaults(func=run_generate_alt_text_subcommand)
 
     # Parse arguments
     try:
