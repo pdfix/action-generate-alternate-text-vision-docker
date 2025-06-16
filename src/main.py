@@ -87,9 +87,6 @@ def generate_alt_text(input_file: str, output_file: str, license_name: str, lice
     if not os.path.isfile(input_file):
         raise Exception(f"Error: The input file '{input_file}' does not exist.")
 
-    if not input_file.lower().endswith(".pdf") or not output_file.lower().endswith(".pdf"):
-        raise Exception("Input and output file must be PDF")
-
     if input_file.lower().endswith(".pdf") and output_file.lower().endswith(".pdf"):
         generate_alt_texts_in_pdf(input_file, output_file, license_name, license_key, overwrite)
     elif re.search(IMAGE_FILE_EXT_REGEX, input_file, re.IGNORECASE) and output_file.lower().endswith(".txt"):
