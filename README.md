@@ -44,6 +44,7 @@ docker run --rm pdfix/alt-text-vision:latest --help
 ```
 
 ## Exporting Configuration for Integration
+
 To export the configuration JSON file, use the following command:
 
 ```bash
@@ -51,10 +52,12 @@ docker run -v $(pwd):/data -w /data --rm pdfix/alt-text-vision:latest config -o 
 ```
 
 ## License
+
 - PDFix license https://pdfix.net/terms
 
 Trial version of the PDFix SDK may apply a watermark on the page and redact random parts of the PDF including the scanned image in background. Contact us to get an evaluation or production license.
 
 ## Help & Support
+
 To obtain a PDFix SDK license or report an issue please contact us at support@pdfix.net.
 For more information visit https://pdfix.net
