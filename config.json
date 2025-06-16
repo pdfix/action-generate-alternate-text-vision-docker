@@ -44,14 +44,14 @@
             "icon": "add_photo_alternate_vision",
             "category": "Tags",
             "desc": "Automatically generates alternate text from an image file using Vision, saving the description to a text file.",
-            "program": "docker run --platform linux/amd64 -v \"${working_directory}:/data\" -w /data --rm pdfix/generate-alternate-text-vision:latest generate-alt-text -i \"${input_img}\" -o \"/data/${output_txt}\"",
+            "program": "docker run --platform linux/amd64 -v \"${working_directory}:/data\" -w /data --rm pdfix/generate-alternate-text-vision:latest generate-alt-text -i \"${input_jpg}\" -o \"/data/${output_txt}\"",
             "args": [
                 {
-                    "name": "input_img",
+                    "name": "input_jpg",
                     "desc": "Input image file containing picture",
                     "flags": 2,
                     "type": "file_path",
-                    "ext": "img",
+                    "ext": "jpg",
                     "value": ""
                 },
                 {
