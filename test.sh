@@ -60,7 +60,7 @@ else
 fi
 
 info "Test #03: Run update alternate text on tagged PDF"
-docker run --rm $pltfm -v $(pwd):/data -w /data $img generate-alt-text -i example/PDFUA-1.pdf -o $tmp_dir/passed.pdf > /dev/null
+docker run --rm $pltfm -v $(pwd):/data -w /data $img generate-alt-text -i example/PDFUA-1.pdf -o $tmp_dir/passed.pdf --model /model > /dev/null
 if [ -f "$(pwd)/$tmp_dir/passed.pdf" ]; then
     success "passed"
 else
@@ -69,7 +69,7 @@ else
 fi
 
 info "Test #04(fail test): Run update alternate text on PDF with no structure tree"
-docker run --rm $pltfm -v $(pwd):/data -w /data $img generate-alt-text -i example/climate_change.pdf -o $tmp_dir/failed.pdf > /dev/null
+docker run --rm $pltfm -v $(pwd):/data -w /data $img generate-alt-text -i example/climate_change.pdf -o $tmp_dir/failed.pdf --model /model > /dev/null
 if [ ! $? -eq 0 ]; then
     success "passed"
 else

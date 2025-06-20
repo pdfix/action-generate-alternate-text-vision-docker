@@ -3,17 +3,17 @@ from PIL import Image
 from transformers import AutoTokenizer, VisionEncoderDecoderModel, ViTImageProcessor
 
 
-def generate_alt_text_description(image_path: str) -> list[str]:
+def generate_alt_text_description(image_path: str, model_path: str) -> list[str]:
     """
     Generate alt text description using vission AI.
 
     Args:
         image_path (str): Path to file containing image.
+        model_path (str): Path to Vision model. Default value is "model".
 
     Returns:
         List of possible texts.
     """
-    model_path = "./model"
     model = VisionEncoderDecoderModel.from_pretrained(model_path, local_files_only=True)
     feature_extractor = ViTImageProcessor.from_pretrained(model_path, local_files_only=True)
     tokenizer = AutoTokenizer.from_pretrained(model_path, local_files_only=True)

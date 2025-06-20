@@ -38,4 +38,9 @@ COPY model/ /usr/alt-desc/src/model
 ENV TRANSFORMERS_OFFLINE=1
 
 
+# Add softlink for the model directory into root directory
+RUN mkdir -p /data && \
+    ln -s /usr/alt-desc/src/model /model
+
+
 ENTRYPOINT ["/usr/alt-desc/venv/bin/python3", "/usr/alt-desc/src/main.py"]

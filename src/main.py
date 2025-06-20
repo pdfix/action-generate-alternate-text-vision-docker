@@ -33,6 +33,13 @@ def set_arguments(
                 parser.add_argument("--input", "-i", type=str, required=True, help="The input PDF file")
             case "key":
                 parser.add_argument("--key", type=str, help="PDFix license key")
+            case "model":
+                parser.add_argument(
+                    "--model",
+                    type=str,
+                    default="model",
+                    help='Path to local model directory. It cannot contain "..". Default value is "model".',
+                )
             case "name":
                 parser.add_argument("--name", type=str, help="PDFix license name")
             case "output":
@@ -70,10 +77,12 @@ def get_pdfix_config(path: str) -> None:
 
 
 def run_generate_alt_text_subcommand(args) -> None:
-    generate_alt_text(args.input, args.output, args.name, args.key, args.overwrite)
+    generate_alt_text(args.input, args.output, args.name, args.key, args.overwrite, args.model)
 
 
-def generate_alt_text(input_file: str, output_file: str, license_name: str, license_key: str, overwrite: bool) -> None:
+def generate_alt_text(
+    input_file: str, output_file: str, license_name: str, license_key: str, overwrite: bool, model_path: str
+) -> None:
     """
     Run image detect and use vission to generate alternate text description for images.
 
@@ -83,14 +92,15 @@ def generate_alt_text(input_file: str, output_file: str, license_name: str, lice
         license_name (str): Name used in authorization in PDFix-SDK.
         license_key (str): Key used in authorization in PDFix-SDK.
         overwrite (bool): Overwrite alternate text if already present.
+        model_path (str): Path to Vision model. Default value is "model".
     """
     if not os.path.isfile(input_file):
         raise Exception(f"Error: The input file '{input_file}' does not exist.")
 
     if input_file.lower().endswith(".pdf") and output_file.lower().endswith(".pdf"):
-        generate_alt_texts_in_pdf(input_file, output_file, license_name, license_key, overwrite)
+        generate_alt_texts_in_pdf(input_file, output_file, license_name, license_key, overwrite, model_path)
     elif re.search(IMAGE_FILE_EXT_REGEX, input_file, re.IGNORECASE) and output_file.lower().endswith(".txt"):
-        generate_alt_text_into_txt(input_file, output_file)
+        generate_alt_text_into_txt(input_file, output_file, model_path)
     else:
         raise Exception("No allowed input output file combination. Please see --help.")
 
@@ -122,7 +132,10 @@ def main() -> None:
     generate_alt_text_help += f" Allowed image types: {SUPPORTED_IMAGE_EXT}"
     generate_alt_text_subparser = subparsers.add_parser("generate-alt-text", help=generate_alt_text_help)
     set_arguments(
-        generate_alt_text_subparser, ["name", "key", "input", "output", "overwrite"], True, "The output PDF or TXT file"
+        generate_alt_text_subparser,
+        ["name", "key", "input", "output", "overwrite", "model"],
+        True,
+        "The output PDF or TXT file",
     )
     generate_alt_text_subparser.set_defaults(func=run_generate_alt_text_subcommand)
 

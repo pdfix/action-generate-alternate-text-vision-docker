@@ -22,6 +22,7 @@ def generate_alt_texts_in_pdf(
     license_name: str,
     license_key: str,
     overwrite: bool,
+    model_path: str,
 ) -> None:
     """
     Run detect images and on those images run vission generate alt text.
@@ -32,6 +33,7 @@ def generate_alt_texts_in_pdf(
         license_name (str): Pdfix SDK license name.
         license_key (str): Pdfix SDK license key.
         overwrite (bool): Overwrite alternate text if already present.
+        model_path (str): Path to Vision model. Default value is "model".
     """
     pdfix = GetPdfix()
     if pdfix is None:
@@ -52,7 +54,7 @@ def generate_alt_texts_in_pdf(
     try:
         items = browse_tags_recursive(child_element, "Figure")
         for element in items:
-            process_image(pdfix, element, doc, overwrite)
+            process_image(pdfix, element, doc, overwrite, model_path)
     except Exception:
         raise
 
@@ -60,7 +62,7 @@ def generate_alt_texts_in_pdf(
         raise PdfixException("Unable to save PDF ")
 
 
-def process_image(pdfix: Pdfix, elem: PdsStructElement, doc: PdfDoc, overwrite: bool) -> None:
+def process_image(pdfix: Pdfix, elem: PdsStructElement, doc: PdfDoc, overwrite: bool, model_path: str) -> None:
     """
     For given image tag element generate alt text description using vision.
 
@@ -69,6 +71,7 @@ def process_image(pdfix: Pdfix, elem: PdsStructElement, doc: PdfDoc, overwrite: 
         elem (PdsStructElement): Image element to generate alt text for.
         doc (PdfDoc): PDF document.
         overwrite (bool): Should original alt text be overwritten?
+        model_path (str): Path to Vision model. Default value is "model".
     """
     image_name = f"image_{elem.GetObject().GetId()}.jpg"
 
@@ -107,7 +110,7 @@ def process_image(pdfix: Pdfix, elem: PdsStructElement, doc: PdfDoc, overwrite: 
 
     try:
         # Use AI to get alt description
-        response = generate_alt_text_description(image_name)
+        response = generate_alt_text_description(image_name, model_path)
 
         alt_text_by_vission = response[0]
         original_alt_text = elem.GetAlt()

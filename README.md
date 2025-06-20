@@ -22,7 +22,7 @@ To run docker container as CLI you should share the folder with PDF to process u
 In this example all Figure tags without alt text will get description of image.
 
 ```bash
-docker run -v $(pwd):/data -w /data --rm pdfix/alt-text-vision:latest generate-alt-text -i input.pdf -o output.pdf
+docker run -v $(pwd):/data -w /data --rm pdfix/alt-text-vision:latest generate-alt-text -i input.pdf -o output.pdf --model /model
 ```
 
 With PDFix License add these arguments.
@@ -31,10 +31,12 @@ With PDFix License add these arguments.
 --name ${LICENSE_NAME} --key ${LICENSE_KEY}
 ```
 
+Argument `--model /model` is required in order to tell vision where model is located. Without this vision would fail to find model.
+
 You can also generate alt text just for one image using this example:
 
 ```bash
-docker run -v $(pwd):/data -w /data --rm pdfix/alt-text-vision:latest generate-alt-text -i image.jpg -o output.txt
+docker run -v $(pwd):/data -w /data --rm pdfix/alt-text-vision:latest generate-alt-text -i image.jpg -o output.txt --model /model
 ```
 
 For more detailed information about the available command-line arguments, you can run the following command:
