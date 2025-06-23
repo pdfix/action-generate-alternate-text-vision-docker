@@ -3,7 +3,7 @@
     "version": "v0.0.0",
     "actions": [
         {
-            "title": "Generate Alternate Text (Vision)",
+            "title": "Generate Alternate Text (Vision AI)",
             "name": "pdfix_generate_alternate_text_vision",
             "version": "v0.0.0",
             "icon": "add_photo_alternate_vision",
@@ -37,7 +37,7 @@
             ]
         },
         {
-            "title": "Generate Alternate Text from Image to Text (Vision)",
+            "title": "Generate Alternate Text from Image to Text (Vision AI)",
             "name": "pdfix_generate_alternate_text_from_image_to_text_vision",
             "version": "v0.0.0",
             "subtype": "generate_alt_text_img_to_txt",
