@@ -5,11 +5,32 @@ import sys
 import threading
 import traceback
 from pathlib import Path
+from typing import Any
 
 from constants import IMAGE_FILE_EXT_REGEX, SUPPORTED_IMAGE_EXT
 from image_update import DockerImageContainerUpdateChecker
 from process_image import generate_alt_text_into_txt
 from process_pdf import generate_alt_texts_in_pdf
+
+
+def str2bool(value: Any) -> bool:
+    """
+    Helper function to convert argument to boolean.
+
+    Args:
+        value (Any): The value to convert to boolean.
+
+    Returns:
+        Parsed argument as boolean.
+    """
+    if isinstance(value, bool):
+        return value
+    if value.lower() in ("yes", "true", "t", "1"):
+        return True
+    elif value.lower() in ("no", "false", "f", "0"):
+        return False
+    else:
+        raise ValueError("Boolean value expected.")
 
 
 def set_arguments(
@@ -47,8 +68,7 @@ def set_arguments(
             case "overwrite":
                 parser.add_argument(
                     "--overwrite",
-                    action="store_true",
-                    required=False,
+                    type=str2bool,
                     default=False,
                     help="Overwrite alternate text if already present in the tag",
                 )
