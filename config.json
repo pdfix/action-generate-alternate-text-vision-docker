@@ -9,7 +9,7 @@
             "icon": "add_photo_alternate_vision",
             "category": "Tags",
             "desc": "Automatically generates alternate text for Figure tags using Vision, embedding it into each figure's Alt attribute.",
-            "program": "docker run --platform linux/amd64 -v \"${working_directory}:/data\" -w /data --rm pdfix/generate-alternate-text-vision:latest generate-alt-text -i \"${input_pdf}\" -o \"/data/${output_pdf}\" --overwrite \"${overwrite}\" --name \"${license_name}\" --key \"${license_key}\" --model /model",
+            "program": "docker run --platform linux/amd64 -v \"${working_directory}:/data\" -w /data --rm pdfix/generate-alternate-text-vision:latest generate-alt-text -i \"${input_pdf}\" -o \"/data/${output_pdf}\" --overwrite \"${overwrite}\" --zoom \"${zoom}\" --name \"${license_name}\" --key \"${license_key}\" --model /model",
             "args": [
                 {
                     "name": "input_pdf",
@@ -33,6 +33,13 @@
                     "name": "overwrite",
                     "type": "bool",
                     "value": false
+                },
+                {
+                    "title": "Rendering Zoom Level",
+                    "name": "zoom",
+                    "desc": "Pages are provided as images that are rendered using this zoom level",
+                    "type": "float",
+                    "value": "2.0"
                 }
             ]
         },

@@ -22,6 +22,7 @@ def generate_alt_texts_in_pdf(
     license_name: str,
     license_key: str,
     overwrite: bool,
+    zoom: float,
     model_path: str,
 ) -> None:
     """
@@ -33,6 +34,7 @@ def generate_alt_texts_in_pdf(
         license_name (str): Pdfix SDK license name.
         license_key (str): Pdfix SDK license key.
         overwrite (bool): Overwrite alternate text if already present.
+        zoom (float): Zoom level for rendering the page.
         model_path (str): Path to Vision model. Default value is "model".
     """
     pdfix = GetPdfix()
@@ -54,7 +56,7 @@ def generate_alt_texts_in_pdf(
     try:
         items = browse_tags_recursive(child_element, "Figure")
         for element in items:
-            process_image(pdfix, element, doc, overwrite, model_path)
+            process_image(pdfix, element, doc, overwrite, zoom, model_path)
     except Exception:
         raise
 
@@ -62,7 +64,9 @@ def generate_alt_texts_in_pdf(
         raise PdfixException("Unable to save PDF ")
 
 
-def process_image(pdfix: Pdfix, elem: PdsStructElement, doc: PdfDoc, overwrite: bool, model_path: str) -> None:
+def process_image(
+    pdfix: Pdfix, elem: PdsStructElement, doc: PdfDoc, overwrite: bool, zoom: float, model_path: str
+) -> None:
     """
     For given image tag element generate alt text description using vision.
 
@@ -71,6 +75,7 @@ def process_image(pdfix: Pdfix, elem: PdsStructElement, doc: PdfDoc, overwrite: 
         elem (PdsStructElement): Image element to generate alt text for.
         doc (PdfDoc): PDF document.
         overwrite (bool): Should original alt text be overwritten?
+        zoom (float): Zoom level for rendering the page.
         model_path (str): Path to Vision model. Default value is "model".
     """
     image_name = f"image_{elem.GetObject().GetId()}.jpg"
@@ -104,7 +109,7 @@ def process_image(pdfix: Pdfix, elem: PdsStructElement, doc: PdfDoc, overwrite: 
         print(f"[{image_name}] image found but can't determine the page number")
         return
 
-    data = render_part_of_page(pdfix, doc, page_num, bbox, 1)
+    data = render_part_of_page(pdfix, doc, page_num, bbox, zoom)
     with open(image_name, "wb") as bf:
         bf.write(data)
 
