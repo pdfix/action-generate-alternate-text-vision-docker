@@ -1,48 +1,43 @@
 #!/bin/bash
 
-# local docker test 
+# This is local docker test during build and push action.
 
+# Colors for output into console
 GREEN='\033[0;32m'
 RED='\033[0;31m'
 PURPLE='\033[0;35m'
 NC='\033[0m' # No Color
 
 # Function to print info messages
-info() {
-    echo -e "${PURPLE}$1${NC}"
-}
+info() { echo -e "${PURPLE}$1${NC}"; }
 
 # Function to print success messages
-success() {
-    echo -e "${GREEN}$1${NC}"
-}
+success() { echo -e "${GREEN}$1${NC}"; }
 
 # Function to print error messages
-error() {
-    echo -e "${RED}ERROR: $1${NC}"
-}
+error() { echo -e "${RED}ERROR: $1${NC}"; }
 
 # init
 pushd "$(dirname $0)" > /dev/null
 
 EXIT_STATUS=0
-img="alt-text-vision:test"
-pltfm="--platform linux/amd64"
-tmp_dir=".test"
+DOCKER_IMAGE="generate-alternate-text-vision:test"
+PLATFORM="--platform linux/amd64"
+TEMPORARY_DIRECTORY=".test"
 
 info "Building docker image..."
-docker build $pltfm --rm -t $img .
+docker build $PLATFORM --rm -t $DOCKER_IMAGE .
 
-if [ -d "$(pwd)/$tmp_dir" ]; then
-    rm -rf $(pwd)/$tmp_dir
+if [ -d "$(pwd)/$TEMPORARY_DIRECTORY" ]; then
+    rm -rf $(pwd)/$TEMPORARY_DIRECTORY
 fi
-mkdir -p $(pwd)/$tmp_dir
+mkdir -p $(pwd)/$TEMPORARY_DIRECTORY
 
 info "List files in cwd"
-docker run --rm $pltfm -v $(pwd):/data -w /data --entrypoint ls $img
+docker run --rm $PLATFORM -v $(pwd):/data -w /data --entrypoint ls $DOCKER_IMAGE
 
 info "Test #01: Show help"
-docker run --rm $pltfm -v $(pwd):/data -w /data $img --help > /dev/null
+docker run --rm $PLATFORM -v $(pwd):/data -w /data $DOCKER_IMAGE --help > /dev/null
 if [ $? -eq 0 ]; then
     success "passed"
 else
@@ -51,8 +46,8 @@ else
 fi
 
 info "Test #02: Extract config"
-docker run --rm $pltfm -v $(pwd):/data -w /data $img config -o $tmp_dir/config.json > /dev/null
-if [ -f "$(pwd)/$tmp_dir/config.json" ]; then
+docker run --rm $PLATFORM -v $(pwd):/data -w /data $DOCKER_IMAGE config -o $TEMPORARY_DIRECTORY/config.json > /dev/null
+if [ -f "$(pwd)/$TEMPORARY_DIRECTORY/config.json" ]; then
     success "passed"
 else
     error "config.json not saved"
@@ -60,8 +55,8 @@ else
 fi
 
 info "Test #03: Run update alternate text on tagged PDF"
-docker run --rm $pltfm -v $(pwd):/data -w /data $img generate-alt-text -i example/PDFUA-1.pdf -o $tmp_dir/passed.pdf --model /model > /dev/null
-if [ -f "$(pwd)/$tmp_dir/passed.pdf" ]; then
+docker run --rm $PLATFORM -v $(pwd):/data -w /data $DOCKER_IMAGE generate-alt-text -i example/PDFUA-1.pdf -o $TEMPORARY_DIRECTORY/passed.pdf --model /model > /dev/null
+if [ -f "$(pwd)/$TEMPORARY_DIRECTORY/passed.pdf" ]; then
     success "passed"
 else
     error "alt-text-vision to pdf failed on example/passed.pdf"
@@ -69,7 +64,7 @@ else
 fi
 
 info "Test #04(fail test): Run update alternate text on PDF with no structure tree"
-docker run --rm $pltfm -v $(pwd):/data -w /data $img generate-alt-text -i example/climate_change.pdf -o $tmp_dir/failed.pdf --model /model > /dev/null
+docker run --rm $PLATFORM -v $(pwd):/data -w /data $DOCKER_IMAGE generate-alt-text -i example/climate_change.pdf -o $TEMPORARY_DIRECTORY/failed.pdf --model /model > /dev/null
 if [ ! $? -eq 0 ]; then
     success "passed"
 else
@@ -78,7 +73,7 @@ else
 fi
 
 info "Removing testing docker image"
-docker rmi $img
+docker rmi $DOCKER_IMAGE
 
 popd > /dev/null
 
