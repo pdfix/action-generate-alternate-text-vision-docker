@@ -54,23 +54,40 @@ else
     EXIT_STATUS=1
 fi
 
-info "Test #03: Run update alternate text on tagged PDF"
+info "Test #03: Run generate alternate text on tagged PDF"
 docker run --rm $PLATFORM -v $(pwd):/data -w /data $DOCKER_IMAGE generate-alt-text -i example/PDFUA-1.pdf -o $TEMPORARY_DIRECTORY/passed.pdf --model /model > /dev/null
 if [ -f "$(pwd)/$TEMPORARY_DIRECTORY/passed.pdf" ]; then
     success "passed"
 else
-    error "alt-text-vision to pdf failed on example/passed.pdf"
+    error "generate alternate text on tagged pdf failed on example/PDFUA-1.pdf"
     EXIT_STATUS=1
 fi
 
-info "Test #04(fail test): Run update alternate text on PDF with no structure tree"
-docker run --rm $PLATFORM -v $(pwd):/data -w /data $DOCKER_IMAGE generate-alt-text -i example/climate_change.pdf -o $TEMPORARY_DIRECTORY/failed.pdf --model /model > /dev/null
-if [ ! $? -eq 0 ]; then
+info "Test #04: Run generate alternate text on image"
+docker run --rm $PLATFORM -v $(pwd):/data -w /data $DOCKER_IMAGE generate-alt-text -i example/image_example.jpg -o $TEMPORARY_DIRECTORY/image_example.txt --model /model > /dev/null
+if [ -f "$(pwd)/$TEMPORARY_DIRECTORY/image_example.txt" ]; then
     success "passed"
 else
-    error "alt-text-vision should fail on pdf that has no structure tree"
+    error "generate alternate text on image failed on example/image_example.jpg"
     EXIT_STATUS=1
 fi
+
+# Move this to functional testing part
+
+# info "Test #04(fail test): Run update alternate text on PDF with no structure tree"
+# docker run --rm $PLATFORM -v $(pwd):/data -w /data $DOCKER_IMAGE generate-alt-text -i example/climate_change.pdf -o $TEMPORARY_DIRECTORY/failed.pdf --model /model > /dev/null
+# if [ ! $? -eq 0 ]; then
+#     success "passed"
+# else
+#     error "alt-text-vision should fail on pdf that has no structure tree"
+#     EXIT_STATUS=1
+# fi
+
+info "Cleaning up temporary files from tests"
+rm -f $TEMPORARY_DIRECTORY/config.json
+rm -f $TEMPORARY_DIRECTORY/passed.pdf
+rm -f $TEMPORARY_DIRECTORY/image_example.txt
+rmdir $(pwd)/$TEMPORARY_DIRECTORY
 
 info "Removing testing docker image"
 docker rmi $DOCKER_IMAGE
