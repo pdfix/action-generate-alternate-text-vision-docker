@@ -33,8 +33,8 @@ if [ -d "$(pwd)/$TEMPORARY_DIRECTORY" ]; then
 fi
 mkdir -p $(pwd)/$TEMPORARY_DIRECTORY
 
-info "List files in cwd"
-docker run --rm $PLATFORM -v $(pwd):/data -w /data --entrypoint ls $DOCKER_IMAGE
+info "List files in /usr/alt-desc"
+docker run --rm $PLATFORM -v $(pwd):/data -w /data --entrypoint ls $DOCKER_IMAGE /usr/alt-desc/
 
 info "Test #01: Show help"
 docker run --rm $PLATFORM -v $(pwd):/data -w /data $DOCKER_IMAGE --help > /dev/null
