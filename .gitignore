@@ -25,7 +25,6 @@ venv.bak/
 
 # Testing related
 .test
-*.jpg
 
 # Directories for model downloaded
 model
