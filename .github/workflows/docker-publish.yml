@@ -65,8 +65,9 @@ jobs:
 
       - name: Download model data into ./model
         run: |
-          mkdir -p ./model
+          mkdir -p ./models
           python download_models.py
+          mkdir -p ./model
           cp -L ./models/models--nlpconnect--vit-gpt2-image-captioning/snapshots/*/* ./model
           rm -f ./model/model.safetensors
           rm -rf ./models

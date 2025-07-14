@@ -24,8 +24,19 @@ def generate_alt_text_description(image_path: str, model_path: str) -> list[str]
 
     # Generating settings
     max_length = 16
-    num_beams = 4
+    num_beams = 1  # otherwise _reorder_cache() needs to be implemented
     gen_kwargs = {"max_length": max_length, "num_beams": num_beams}
+
+    # HACK for num_beams > 1 (like 4)
+    # from transformers.models.gpt2.modeling_gpt2 import GPT2LMHeadModel
+
+    # def gpt2_reorder_cache(past, beam_idx):
+    #     return tuple(
+    #         tuple(past_state.index_select(0, beam_idx) for past_state in layer_past)
+    #         for layer_past in past
+    #     )
+
+    # GPT2LMHeadModel._reorder_cache = staticmethod(gpt2_reorder_cache)
 
     # Load image data
     image: Image.Image = Image.open(image_path)
