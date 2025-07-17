@@ -26,7 +26,7 @@ PLATFORM="--platform linux/amd64"
 TEMPORARY_DIRECTORY=".test"
 
 info "Building docker image..."
-docker build $PLATFORM --rm -t $DOCKER_IMAGE .
+docker build $PLATFORM -t $DOCKER_IMAGE .
 
 if [ -d "$(pwd)/$TEMPORARY_DIRECTORY" ]; then
     rm -rf $(pwd)/$TEMPORARY_DIRECTORY
