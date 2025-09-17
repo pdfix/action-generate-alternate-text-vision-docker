@@ -46,7 +46,7 @@ def generate_alt_texts_in_pdf(
     # Open doc
     doc = pdfix.OpenDoc(input_path, "")
     if doc is None:
-        raise PdfixException(pdfix, "Unable to open pdf")
+        raise PdfixException(pdfix, "Unable to open PDF")
 
     struct_tree = doc.GetStructTree()
     if struct_tree is None:
@@ -61,7 +61,7 @@ def generate_alt_texts_in_pdf(
         raise
 
     if not doc.Save(output_path, kSaveFull):
-        raise PdfixException("Unable to save PDF ")
+        raise PdfixException("Unable to save PDF")
 
 
 def process_image(
