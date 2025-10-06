@@ -3,7 +3,7 @@
     "version": "v0.0.0",
     "actions": [
         {
-            "title": "Generate Alternate Text (Vision AI)",
+            "title": "Set Alternate Description (Vision AI)",
             "name": "pdfix_generate_alternate_text_vision",
             "desc": "Automatically generates alternate text for Figure tags using Vision, embedding it into each figure's Alt attribute [Local]",
             "version": "v0.0.0",
@@ -45,7 +45,7 @@
             ]
         },
         {
-            "title": "Generate Alternate Text from Image to Text (Vision AI)",
+            "title": "Set Alternate Description (Vision AI)",
             "name": "pdfix_generate_alternate_text_from_image_to_text_vision",
             "desc": "Automatically generates alternate text from an image file using Vision, saving the description to a text file [Local]",
             "version": "v0.0.0",
