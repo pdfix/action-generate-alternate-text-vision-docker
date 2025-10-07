@@ -3,7 +3,7 @@
     "version": "v0.0.0",
     "actions": [
         {
-            "title": "Set Alternate Description (Vision AI)",
+            "title": "Set Alternate Description  (Vision AI)",
             "name": "pdfix_generate_alternate_text_vision",
             "desc": "Automatically generates alternate text for Figure tags using Vision, embedding it into each figure's Alt attribute [Local]",
             "version": "v0.0.0",
