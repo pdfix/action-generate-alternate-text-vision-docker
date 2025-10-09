@@ -43,4 +43,9 @@ RUN mkdir -p /data && \
     ln -s /usr/alt-desc/src/model /model
 
 
+# License
+COPY THIRD_PARTY_LICENSES.md /THIRD_PARTY_LICENSES.md
+LABEL license="https://pdfix.net/terms (PDFix SDK) and Apache‑2.0 (Vision + GPT2 Image Captioning)"
+
+
 ENTRYPOINT ["/usr/alt-desc/venv/bin/python3", "/usr/alt-desc/src/main.py"]

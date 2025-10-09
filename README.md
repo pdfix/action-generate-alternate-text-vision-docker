@@ -55,7 +55,12 @@ docker run -v $(pwd):/data -w /data --rm pdfix/alt-text-vision:latest config -o 
 
 ## License
 
-- PDFix license https://pdfix.net/terms
+This project uses the [vit-gpt2-image-captioning](https://huggingface.co/nlpconnect/vit-gpt2-image-captioning) model provided by [nlpconnect](https://huggingface.co/nlpconnect) via Hugging Face, which is licensed under the [Apache 2.0 License](https://www.apache.org/licenses/LICENSE-2.0). See `THIRD_PARTY_LICENSES.md` for details.
+
+The Docker image includes:
+
+- Vision + GPT2 Image Captioning, Apache‑2.0 License
+- PDFix SDK, subject to [PDFix Terms](https://pdfix.net/terms)
 
 Trial version of the PDFix SDK may apply a watermark on the page and redact random parts of the PDF including the scanned image in background. Contact us to get an evaluation or production license.
 
