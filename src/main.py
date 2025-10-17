@@ -8,6 +8,14 @@ from pathlib import Path
 from typing import Any
 
 from constants import IMAGE_FILE_EXT_REGEX, SUPPORTED_IMAGE_EXT
+from exceptions import (
+    EC_ARG_GENERAL,
+    MESSAGE_ARG_GENERAL,
+    ArgumentException,
+    ArgumentInputMissingException,
+    ArgumentInputOutputNotAllowedException,
+    ExpectedException,
+)
 from image_update import DockerImageContainerUpdateChecker
 from process_image import generate_alt_text_into_txt
 from process_pdf import generate_alt_texts_in_pdf
@@ -30,7 +38,7 @@ def str2bool(value: Any) -> bool:
     elif value.lower() in ("no", "false", "f", "0"):
         return False
     else:
-        raise ValueError("Boolean value expected.")
+        raise ArgumentException(f"{MESSAGE_ARG_GENERAL} Boolean value expected.")
 
 
 def set_arguments(
@@ -126,14 +134,14 @@ def generate_alt_text(
         model_path (str): Path to Vision model. Default value is "model".
     """
     if not os.path.isfile(input_file):
-        raise Exception(f"Error: The input file '{input_file}' does not exist.")
+        raise ArgumentInputMissingException(input_file)
 
     if input_file.lower().endswith(".pdf") and output_file.lower().endswith(".pdf"):
         generate_alt_texts_in_pdf(input_file, output_file, license_name, license_key, overwrite, zoom, model_path)
     elif re.search(IMAGE_FILE_EXT_REGEX, input_file, re.IGNORECASE) and output_file.lower().endswith(".txt"):
         generate_alt_text_into_txt(input_file, output_file, model_path)
     else:
-        raise Exception("No allowed input output file combination. Please see --help.")
+        raise ArgumentInputOutputNotAllowedException()
 
 
 def main() -> None:
@@ -173,14 +181,15 @@ def main() -> None:
     # Parse arguments
     try:
         args = parser.parse_args()
+    except ExpectedException as e:
+        print(e.message, file=sys.stderr)
+        sys.exit(e.error_code)
     except SystemExit as e:
-        if e.code == 0:  # This happens when --help is used, exit gracefully
-            sys.exit(0)
-        print("Failed to parse arguments. Please check the usage and try again.")
-        sys.exit(e.code)
-    except ValueError as e:
-        print(f"Parsing error: {e}")
-        sys.exit(2)
+        if e.code != 0:
+            print(MESSAGE_ARG_GENERAL, file=sys.stderr)
+            sys.exit(EC_ARG_GENERAL)
+        # This happens when --help is used, exit gracefully
+        sys.exit(0)
 
     if hasattr(args, "func"):
         # Check for updates only when help is not checked
@@ -192,6 +201,9 @@ def main() -> None:
         # Run subcommand
         try:
             args.func(args)
+        except ExpectedException as e:
+            print(e.message, file=sys.stderr)
+            sys.exit(e.error_code)
         except Exception as e:
             print(traceback.format_exc(), file=sys.stderr)
             print(f"Failed to run the program: {e}", file=sys.stderr)

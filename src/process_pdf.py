@@ -10,7 +10,12 @@ from pdfixsdk.Pdfix import (
     kSaveFull,
 )
 
-from exceptions import PdfixException
+from exceptions import (
+    PdfixFailedToOpenException,
+    PdfixFailedToSaveException,
+    PdfixInitializeException,
+    PdfixNoTagsException,
+)
 from page_renderer import render_part_of_page
 from utils_sdk import authorize_sdk, browse_tags_recursive
 from vision import generate_alt_text_description
@@ -39,18 +44,18 @@ def generate_alt_texts_in_pdf(
     """
     pdfix = GetPdfix()
     if pdfix is None:
-        raise Exception("Pdfix Initialization fail")
+        raise PdfixInitializeException()
 
     authorize_sdk(pdfix, license_name, license_key)
 
     # Open doc
     doc = pdfix.OpenDoc(input_path, "")
     if doc is None:
-        raise PdfixException(pdfix, "Unable to open PDF")
+        raise PdfixFailedToOpenException(pdfix, input_path)
 
     struct_tree = doc.GetStructTree()
     if struct_tree is None:
-        raise PdfixException(pdfix, "PDF has no structure tree")
+        raise PdfixNoTagsException(pdfix)
 
     child_element = struct_tree.GetStructElementFromObject(struct_tree.GetChildObject(0))
     try:
@@ -61,7 +66,7 @@ def generate_alt_texts_in_pdf(
         raise
 
     if not doc.Save(output_path, kSaveFull):
-        raise PdfixException("Unable to save PDF")
+        raise PdfixFailedToSaveException(output_path)
 
 
 def process_image(
