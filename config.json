@@ -46,7 +46,7 @@
             "errors": {
                 "10": "Failed to parse arguments. Please check the usage and try again.",
                 "11": "Input file does not exists.",
-                "12": "Not allowed input output file combination. Please see --help",
+                "12": "Not allowed input output file combination. Please see --help.",
                 "20": "Failed to initialize PDFix SDK.",
                 "21": "Failed to activate PDFix SDK acount.",
                 "22": "Failed to authorize PDFix SDK acount.",
@@ -87,7 +87,7 @@
             "errors": {
                 "10": "Failed to parse arguments. Please check the usage and try again.",
                 "11": "Input file does not exists.",
-                "12": "Not allowed input output file combination. Please see --help",
+                "12": "Not allowed input output file combination. Please see --help.",
                 "20": "Failed to initialize PDFix SDK.",
                 "21": "Failed to activate PDFix SDK acount.",
                 "22": "Failed to authorize PDFix SDK acount.",
