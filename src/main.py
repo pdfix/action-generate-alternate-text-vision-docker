@@ -190,6 +190,10 @@ def main() -> None:
             sys.exit(EC_ARG_GENERAL)
         # This happens when --help is used, exit gracefully
         sys.exit(0)
+    except Exception as e:
+        print(traceback.format_exc(), file=sys.stderr)
+        print(f"Failed to run the program: {e}", file=sys.stderr)
+        sys.exit(1)
 
     if hasattr(args, "func"):
         # Check for updates only when help is not checked
