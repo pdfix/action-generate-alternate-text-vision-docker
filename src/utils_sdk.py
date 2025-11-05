@@ -1,7 +1,7 @@
 import re
 from typing import Optional
 
-from pdfixsdk import Pdfix, PdsStructElement, kPdsStructChildElement
+from pdfixsdk import Pdfix, PdsStructElement, PdsStructTree, PsAccountAuthorization, kPdsStructChildElement
 
 from exceptions import PdfixActivationException, PdfixAuthorizationException
 
@@ -16,7 +16,7 @@ def authorize_sdk(pdfix: Pdfix, license_name: Optional[str], license_key: Option
         license_key (string): Pdfix sdk license key
     """
     if license_name and license_key:
-        authorization = pdfix.GetAccountAuthorization()
+        authorization: PsAccountAuthorization = pdfix.GetAccountAuthorization()
         if not authorization.Authorize(license_name, license_key):
             raise PdfixAuthorizationException(pdfix)
     elif license_key:
@@ -42,9 +42,12 @@ def browse_tags_recursive(element: PdsStructElement, regex_tag: str) -> list[Pds
         element (PdsStructElement): The parent structure element to start browsing from.
         regex_tag (str): The regular expression to match tags.
     """
-    result = []
-    count = element.GetNumChildren()
-    structure_tree = element.GetStructTree()
+    result: list[PdsStructElement] = []
+    count: int = element.GetNumChildren()
+    structure_tree: Optional[PdsStructTree] = element.GetStructTree()
+    if not structure_tree:
+        return result
+
     for i in range(0, count):
         if element.GetChildType(i) != kPdsStructChildElement:
             continue

@@ -1,4 +1,5 @@
 import ctypes
+from typing import Optional
 
 from pdfixsdk import (
     PdfDevRect,
@@ -9,6 +10,8 @@ from pdfixsdk import (
     PdfPageRenderParams,
     PdfPageView,
     PdfRect,
+    PsImage,
+    PsMemoryStream,
     kImageDIBFormatArgb,
     kImageFormatJpg,
     kRotate0,
@@ -31,12 +34,12 @@ def render_part_of_page(pdfix: Pdfix, doc: PdfDoc, page_num: int, bbox: PdfRect,
     Returns:
         Rendered image data in bytearray.
     """
-    page: PdfPage = doc.AcquirePage(page_num)
+    page: Optional[PdfPage] = doc.AcquirePage(page_num)
     if page is None:
         raise PdfixFailedToRenderException(pdfix, "Unable to acquire the page")
 
     try:
-        page_view: PdfPageView = page.AcquirePageView(zoom, kRotate0)
+        page_view: Optional[PdfPageView] = page.AcquirePageView(zoom, kRotate0)
         if page_view is None:
             raise PdfixFailedToRenderException(pdfix, "Unable to acquire page view")
 
@@ -44,35 +47,37 @@ def render_part_of_page(pdfix: Pdfix, doc: PdfDoc, page_num: int, bbox: PdfRect,
             rect: PdfDevRect = page_view.RectToDevice(bbox)
 
             # render content
-            render_params = PdfPageRenderParams()
+            render_params: PdfPageRenderParams = PdfPageRenderParams()
             render_params.matrix = page_view.GetDeviceMatrix()
             render_params.clip_box = bbox
-            render_params.image = pdfix.CreateImage(
+            ps_image: Optional[PsImage] = pdfix.CreateImage(
                 rect.right - rect.left,
                 rect.bottom - rect.top,
                 kImageDIBFormatArgb,
             )
-            if render_params.image is None:
+            if ps_image is None:
                 raise PdfixFailedToRenderException(pdfix, "Unable to create the image")
+
+            render_params.image = ps_image
 
             try:
                 if not page.DrawContent(render_params):
                     raise PdfixFailedToRenderException(pdfix, "Unable to draw the content")
 
                 # save image to stream and data
-                memory_stream = pdfix.CreateMemStream()
+                memory_stream: Optional[PsMemoryStream] = pdfix.CreateMemStream()
                 if memory_stream is None:
                     raise PdfixFailedToRenderException(pdfix, "Unable to create memory stream")
 
                 try:
-                    img_params = PdfImageParams()
+                    img_params: PdfImageParams = PdfImageParams()
                     img_params.format = kImageFormatJpg
 
                     if not render_params.image.SaveToStream(memory_stream, img_params):
                         raise PdfixFailedToRenderException(pdfix, "Unable to save the image to the stream")
 
-                    data = bytearray(memory_stream.GetSize())
-                    raw_data = (ctypes.c_ubyte * len(data)).from_buffer(data)
+                    data: bytearray = bytearray(memory_stream.GetSize())
+                    raw_data: ctypes.Array[ctypes.c_ubyte] = (ctypes.c_ubyte * len(data)).from_buffer(data)
                     memory_stream.Read(0, raw_data, len(data))
 
                 except Exception:

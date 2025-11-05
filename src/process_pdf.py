@@ -1,12 +1,15 @@
 import os
+from typing import Optional
 
 from pdfixsdk.Pdfix import (
     GetPdfix,
     PdfDoc,
     Pdfix,
     PdfRect,
+    PdsArray,
     PdsDictionary,
     PdsStructElement,
+    PdsStructTree,
     kSaveFull,
 )
 
@@ -42,24 +45,24 @@ def generate_alt_texts_in_pdf(
         zoom (float): Zoom level for rendering the page.
         model_path (str): Path to Vision model. Default value is "model".
     """
-    pdfix = GetPdfix()
+    pdfix: Optional[Pdfix] = GetPdfix()
     if pdfix is None:
         raise PdfixInitializeException()
 
     authorize_sdk(pdfix, license_name, license_key)
 
     # Open doc
-    doc = pdfix.OpenDoc(input_path, "")
+    doc: Optional[PdfDoc] = pdfix.OpenDoc(input_path, "")
     if doc is None:
         raise PdfixFailedToOpenException(pdfix, input_path)
 
-    struct_tree = doc.GetStructTree()
+    struct_tree: Optional[PdsStructTree] = doc.GetStructTree()
     if struct_tree is None:
         raise PdfixNoTagsException(pdfix)
 
-    child_element = struct_tree.GetStructElementFromObject(struct_tree.GetChildObject(0))
+    child_element: PdsStructElement = struct_tree.GetStructElementFromObject(struct_tree.GetChildObject(0))
     try:
-        items = browse_tags_recursive(child_element, "Figure")
+        items: list[PdsStructElement] = browse_tags_recursive(child_element, "Figure")
         for element in items:
             process_image(pdfix, element, doc, overwrite, zoom, model_path)
     except Exception:
@@ -83,13 +86,13 @@ def process_image(
         zoom (float): Zoom level for rendering the page.
         model_path (str): Path to Vision model. Default value is "model".
     """
-    image_name = f"image_{elem.GetObject().GetId()}.jpg"
+    image_name: str = f"image_{elem.GetObject().GetId()}.jpg"
 
     # get image bbox from attributes
-    bbox = PdfRect()
+    bbox: PdfRect = PdfRect()
     for i in range(0, elem.GetNumAttrObjects()):
-        attr = PdsDictionary(elem.GetAttrObject(i).obj)
-        arr = attr.GetArray("BBox")
+        attr: PdsDictionary = PdsDictionary(elem.GetAttrObject(i).obj)
+        arr: Optional[PdsArray] = attr.GetArray("BBox")
         if not arr:
             continue
         bbox.left = arr.GetNumber(0)
@@ -104,7 +107,7 @@ def process_image(
         return
 
     # get the object page number (it may be written in child objects)
-    page_num = elem.GetPageNumber(0)
+    page_num: int = elem.GetPageNumber(0)
     if page_num == -1:
         for i in range(0, elem.GetNumChildren()):
             page_num = elem.GetChildPageNumber(i)
@@ -114,16 +117,16 @@ def process_image(
         print(f"[{image_name}] image found but can't determine the page number")
         return
 
-    data = render_part_of_page(pdfix, doc, page_num, bbox, zoom)
+    data: bytearray = render_part_of_page(pdfix, doc, page_num, bbox, zoom)
     with open(image_name, "wb") as bf:
         bf.write(data)
 
     try:
         # Use AI to get alt description
-        response = generate_alt_text_description(image_name, model_path)
+        response: list[str] = generate_alt_text_description(image_name, model_path)
 
-        alt_text_by_vission = response[0]
-        original_alt_text = elem.GetAlt()
+        alt_text_by_vission: str = response[0]
+        original_alt_text: str = elem.GetAlt()
 
         if overwrite or not original_alt_text:
             elem.SetAlt(alt_text_by_vission)
