@@ -9,7 +9,7 @@
             "version": "v0.0.0",
             "icon": "add_photo_alternate_vision",
             "category": "Tags",
-            "local": "True",
+            "local": true,
             "program": "docker run -v \"${working_directory}:/data\" -w /data --rm pdfix/generate-alternate-text-vision:latest generate-alt-text -i \"${input_pdf}\" -o \"/data/${output_pdf}\" --overwrite \"${overwrite}\" --zoom \"${zoom}\" --name \"${license_name}\" --key \"${license_key}\" --model /model",
             "args": [
                 {
@@ -64,7 +64,7 @@
             "icon": "add_photo_alternate_vision",
             "category": "Tags",
             "subtype": "generate_alt_text_img_to_txt",
-            "local": "True",
+            "local": true,
             "program": "docker run -v \"${working_directory}:/data\" -w /data --rm pdfix/generate-alternate-text-vision:latest generate-alt-text -i \"${input_jpg}\" -o \"/data/${output_txt}\" --model /model",
             "args": [
                 {
