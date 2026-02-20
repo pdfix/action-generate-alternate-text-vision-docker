@@ -36,7 +36,7 @@ sed -i.bak "s|v0\.0\.0|${version}|g" config.json && rm config.json.bak
 echo "Replaced all occurrences of 'v0.0.0' with '${version}' in config.json."
 
 # Replace "latest" with the provided argument in config.json
-sed -i.bak "s|latest|${version}|g" config.json && rm config.json.bak
+sed -i.bak "s|:latest|:${version}|g" config.json && rm config.json.bak
 
 echo "Replaced all occurrences of 'latest' with '${version}' in config.json."
 
@@ -49,6 +49,6 @@ if [ ! -f "README.md" ]; then
 fi
 
 # Replace "latest" with the provided argument in README.md
-sed -i.bak "s/:latest/:${version}/g" README.md && rm README.md.bak
+sed -i.bak "s|:latest|:${version}|g" README.md && rm README.md.bak
 
 echo "Replaced all occurrences of 'latest' with '${version}' in README.md."
