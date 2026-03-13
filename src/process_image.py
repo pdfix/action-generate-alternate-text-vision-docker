@@ -1,3 +1,5 @@
+from tqdm import tqdm
+
 from vision import generate_alt_text_description
 
 
@@ -10,8 +12,15 @@ def generate_alt_text_into_txt(input_path: str, output_path: str, model_path: st
         output_path (str): Output path for saving the TXT file.
         model_path (str): Path to Vision model. Default value is "model".
     """
-    response: list[str] = generate_alt_text_description(input_path, model_path)
-    alt_text_by_vission: str = response[0]
+    with tqdm(total=100) as progress_bar:
+        progress_bar.set_description("Processing")
 
-    with open(output_path, "w", encoding="utf-8") as output_file:
-        output_file.write(alt_text_by_vission)
+        response: list[str] = generate_alt_text_description(input_path, model_path)
+        alt_text_by_vission: str = response[0]
+
+        with open(output_path, "w", encoding="utf-8") as output_file:
+            output_file.write(alt_text_by_vission)
+
+        progress_bar.n = 100
+        progress_bar.set_description("Done")
+        progress_bar.refresh()

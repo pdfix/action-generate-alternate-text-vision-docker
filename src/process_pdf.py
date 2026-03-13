@@ -12,6 +12,7 @@ from pdfixsdk.Pdfix import (
     PdsStructTree,
     kSaveFull,
 )
+from tqdm import tqdm
 
 from exceptions import (
     PdfixFailedToOpenException,
@@ -45,31 +46,51 @@ def generate_alt_texts_in_pdf(
         zoom (float): Zoom level for rendering the page.
         model_path (str): Path to Vision model. Default value is "model".
     """
-    pdfix: Optional[Pdfix] = GetPdfix()
-    if pdfix is None:
-        raise PdfixInitializeException()
+    with tqdm(total=100) as progress_bar:
+        progress_bar.set_description("Initializing")
 
-    authorize_sdk(pdfix, license_name, license_key)
+        pdfix: Optional[Pdfix] = GetPdfix()
+        if pdfix is None:
+            raise PdfixInitializeException()
 
-    # Open doc
-    doc: Optional[PdfDoc] = pdfix.OpenDoc(input_path, "")
-    if doc is None:
-        raise PdfixFailedToOpenException(pdfix, input_path)
+        authorize_sdk(pdfix, license_name, license_key)
 
-    struct_tree: Optional[PdsStructTree] = doc.GetStructTree()
-    if struct_tree is None:
-        raise PdfixNoTagsException(pdfix)
+        # Open doc
+        doc: Optional[PdfDoc] = pdfix.OpenDoc(input_path, "")
+        if doc is None:
+            raise PdfixFailedToOpenException(pdfix, input_path)
 
-    child_element: PdsStructElement = struct_tree.GetStructElementFromObject(struct_tree.GetChildObject(0))
-    try:
-        items: list[PdsStructElement] = browse_tags_recursive(child_element, "Figure")
-        for element in items:
-            process_image(pdfix, element, doc, overwrite, zoom, model_path)
-    except Exception:
-        raise
+        struct_tree: Optional[PdsStructTree] = doc.GetStructTree()
+        if struct_tree is None:
+            raise PdfixNoTagsException(pdfix)
 
-    if not doc.Save(output_path, kSaveFull):
-        raise PdfixFailedToSaveException(output_path)
+        child_element: PdsStructElement = struct_tree.GetStructElementFromObject(struct_tree.GetChildObject(0))
+
+        progress_bar.update(10)
+        progress_bar.set_description("Processing elements")
+
+        try:
+            items: list[PdsStructElement] = browse_tags_recursive(child_element, "Figure")
+
+            if len(items) > 0:
+                step: float = float(80) / len(items)
+
+                for element in items:
+                    process_image(pdfix, element, doc, overwrite, zoom, model_path)
+                    progress_bar.update(step)
+        except Exception:
+            raise
+
+        progress_bar.n = 95
+        progress_bar.set_description("Saving document")
+        progress_bar.refresh()
+
+        if not doc.Save(output_path, kSaveFull):
+            raise PdfixFailedToSaveException(output_path)
+
+        progress_bar.n = 100
+        progress_bar.set_description("Done")
+        progress_bar.refresh()
 
 
 def process_image(
