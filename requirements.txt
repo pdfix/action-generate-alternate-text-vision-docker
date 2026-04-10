@@ -3,5 +3,5 @@ pdfix-sdk==8.2.0
 requests==2.33.1
 torch==2.8.0
 tqdm==4.67.1
-transformers==4.56.2
+transformers==5.5.3
 types-requests==2.33.0.20260408
