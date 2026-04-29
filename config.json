@@ -59,7 +59,7 @@
                 "25": "Failed to save PDF document.",
                 "26": "PDF document has no tags."
             },
-            "progress_regex": "^[^:]+:\\s+(?<progress>\\d{1,3})%"
+            "progress_regex": "^(?<text>[^:]+):\\s+(?<progress>\\d{1,3})%"
         },
         {
             "title": "Set Alternate Description (Vision AI)",
@@ -105,7 +105,7 @@
                 "25": "Failed to save PDF document.",
                 "26": "PDF document has no tags."
             },
-            "progress_regex": "^[^:]+:\\s+(?<progress>\\d{1,3})%"
+            "progress_regex": "^(?<text>[^:]+):\\s+(?<progress>\\d{1,3})%"
         }
     ]
 }
