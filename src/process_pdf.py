@@ -1,7 +1,7 @@
 import os
 from typing import Optional
 
-from pdfixsdk.Pdfix import (
+from pdfixsdk import (
     GetPdfix,
     PdfDoc,
     Pdfix,
