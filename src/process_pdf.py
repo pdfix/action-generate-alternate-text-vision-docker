@@ -8,6 +8,7 @@ from pdfixsdk import (
     PdfRect,
     PdsArray,
     PdsDictionary,
+    PdsObject,
     PdsStructElement,
     PdsStructTree,
     kSaveFull,
@@ -64,7 +65,12 @@ def generate_alt_texts_in_pdf(
         if struct_tree is None:
             raise PdfixNoTagsException(pdfix)
 
-        child_element: PdsStructElement = struct_tree.GetStructElementFromObject(struct_tree.GetChildObject(0))
+        root_object: Optional[PdsObject] = struct_tree.GetChildObject(0)
+        if root_object is None:
+            raise PdfixNoTagsException(pdfix)
+        child_element: Optional[PdsStructElement] = struct_tree.GetStructElementFromObject(root_object)
+        if child_element is None:
+            raise PdfixNoTagsException(pdfix)
 
         progress_bar.update(10)
         progress_bar.set_description("Processing elements")
@@ -86,7 +92,7 @@ def generate_alt_texts_in_pdf(
         progress_bar.refresh()
 
         if not doc.Save(output_path, kSaveFull):
-            raise PdfixFailedToSaveException(output_path)
+            raise PdfixFailedToSaveException(pdfix, output_path)
 
         progress_bar.n = 100
         progress_bar.set_description("Done")
@@ -107,12 +113,19 @@ def process_image(
         zoom (float): Zoom level for rendering the page.
         model_path (str): Path to Vision model. Default value is "model".
     """
-    image_name: str = f"image_{elem.GetObject().GetId()}.jpg"
+    element_object: Optional[PdsObject] = elem.GetObject()
+    if element_object is None:
+        print("image element has no object")
+        return
+    image_name: str = f"image_{element_object.GetId()}.jpg"
 
     # get image bbox from attributes
     bbox: PdfRect = PdfRect()
     for i in range(0, elem.GetNumAttrObjects()):
-        attr: PdsDictionary = PdsDictionary(elem.GetAttrObject(i).obj)
+        attr_object: Optional[PdsObject] = elem.GetAttrObject(i)
+        if attr_object is None:
+            continue
+        attr: PdsDictionary = PdsDictionary(attr_object.obj)
         arr: Optional[PdsArray] = attr.GetArray("BBox")
         if not arr:
             continue
