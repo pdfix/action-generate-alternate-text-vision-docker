@@ -73,3 +73,4 @@ For PDFix SDK licensing or issues, contact `support@pdfix.net`.
 
 - [PDFix Terms](https://pdfix.net/terms)
 - Vision captioning model ([vit-gpt2-image-captioning](https://huggingface.co/nlpconnect/vit-gpt2-image-captioning)) — [Apache 2.0](https://www.apache.org/licenses/LICENSE-2.0)
+
