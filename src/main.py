@@ -18,7 +18,7 @@ from exceptions import (
 )
 from image_update import DockerImageContainerUpdateChecker
 from process_image import generate_alt_text_into_txt
-from process_pdf import generate_alt_texts_in_pdf
+from process_pdf import GenerateAltTextsInPdf
 
 
 def str2bool(value: Any) -> bool:
@@ -137,7 +137,10 @@ def generate_alt_text(
         raise ArgumentInputMissingException(input_file)
 
     if input_file.lower().endswith(".pdf") and output_file.lower().endswith(".pdf"):
-        generate_alt_texts_in_pdf(input_file, output_file, license_name, license_key, overwrite, zoom, model_path)
+        processor: GenerateAltTextsInPdf = GenerateAltTextsInPdf(
+            input_file, output_file, license_name, license_key, overwrite, zoom, model_path
+        )
+        processor.generate_alt_texts_in_pdf()
     elif re.search(IMAGE_FILE_EXT_REGEX, input_file, re.IGNORECASE) and output_file.lower().endswith(".txt"):
         generate_alt_text_into_txt(input_file, output_file, model_path)
     else:

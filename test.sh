@@ -55,7 +55,7 @@ else
 fi
 
 info "Test #03: Run generate alternate text on tagged PDF"
-docker run --rm $PLATFORM -v $(pwd):/data -w /data $DOCKER_IMAGE generate-alt-text -i example/PDFUA-1.pdf -o $TEMPORARY_DIRECTORY/passed.pdf --model /model > /dev/null
+docker run --rm $PLATFORM -v $(pwd):/data -w /data $DOCKER_IMAGE generate-alt-text -i example/PDFUA-1.pdf -o $TEMPORARY_DIRECTORY/passed.pdf --model /model #> /dev/null
 if [ -f "$(pwd)/$TEMPORARY_DIRECTORY/passed.pdf" ]; then
     success "passed"
 else
