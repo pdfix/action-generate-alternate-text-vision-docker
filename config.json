@@ -91,6 +91,14 @@
                     "type": "file_path",
                     "ext": "txt",
                     "value": ""
+                },
+                {
+                    "title": "Rendering Zoom Level",
+                    "name": "zoom",
+                    "desc": "Zoom level used to render the selected tag into an image.",
+                    "flags": 128,
+                    "type": "float",
+                    "value": "2.0"
                 }
             ],
             "errors": {
