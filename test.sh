@@ -55,7 +55,7 @@ else
 fi
 
 info "Test #03: Run generate alternate text on tagged PDF"
-docker run --rm $PLATFORM -v $(pwd):/data -w /data $DOCKER_IMAGE generate-alt-text -i example/PDFUA-1.pdf -o $TEMPORARY_DIRECTORY/passed.pdf --model /model #> /dev/null
+docker run --rm $PLATFORM -v $(pwd):/data -w /data $DOCKER_IMAGE generate-alt-text -i example/PDFUA-1.pdf -o $TEMPORARY_DIRECTORY/passed.pdf --model /model > /dev/null
 if [ -f "$(pwd)/$TEMPORARY_DIRECTORY/passed.pdf" ]; then
     success "passed"
 else
@@ -71,17 +71,6 @@ else
     error "generate alternate text on image failed on example/image_example.jpg"
     EXIT_STATUS=1
 fi
-
-# Move this to functional testing part
-
-# info "Test #04(fail test): Run update alternate text on PDF with no structure tree"
-# docker run --rm $PLATFORM -v $(pwd):/data -w /data $DOCKER_IMAGE generate-alt-text -i example/climate_change.pdf -o $TEMPORARY_DIRECTORY/failed.pdf --model /model > /dev/null
-# if [ ! $? -eq 0 ]; then
-#     success "passed"
-# else
-#     error "alt-text-vision should fail on pdf that has no structure tree"
-#     EXIT_STATUS=1
-# fi
 
 info "Cleaning up temporary files from tests"
 rm -f $TEMPORARY_DIRECTORY/config.json
