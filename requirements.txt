@@ -1,4 +1,4 @@
-pillow==12.3.0
+pillow==13.0.0
 pdfix-sdk @ https://dl.pdfix.net/builds/pdfix-sdk/master/f47c80aae3bf2db87ed96ec84b62e1b6d4343a92/python/pdfix_sdk-9.2.0-py3-none-any.whl
 # pdfix-sdk==9.2.0
 requests==2.33.1
