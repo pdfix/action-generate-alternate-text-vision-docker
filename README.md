@@ -2,10 +2,21 @@
 
 Runs locally and uses AI Vision models to describe image content in alternative text. For PDF output without watermarks, a **PDFix SDK** license is required.
 
+> [!WARNING]
+> **Deprecated.** This action is no longer developed and no new Docker image is published (the last one is
+> `pdfix/generate-alternate-text-vision:v1.0.2`). For new work use the local alternate text generator
+> [Generate Alternate Text BLIP](https://github.com/pdfix/action-generate-alternate-text-blip-large-docker),
+> which writes better descriptions, especially of charts, logos and composite figures.
+>
+> The repository stays available for users who installed the Vision action in PDFix Desktop earlier: you can
+> see how it works, build an updated image yourself (see [Building the image](#building-the-image)) or use it as
+> a base for your own action.
+
 ## Table of Contents
 
 - [Generate Alternate Text Vision](#generate-alternate-text-vision)
   - [Getting started](#getting-started)
+  - [Building the image](#building-the-image)
   - [Usage](#usage)
   - [Commands](#commands)
   - [Arguments](#arguments)
@@ -18,6 +29,22 @@ Runs locally and uses AI Vision models to describe image content in alternative 
 ## Getting started
 
 You need Docker installed. The first run downloads the image and may take longer than later runs.
+
+## Building the image
+
+The model is not stored in the repository. Download it and build the image:
+
+```bash
+python3 download_models.py
+mkdir -p model
+cp models/models--nlpconnect--vit-gpt2-image-captioning/snapshots/*/* model/
+# the same weights are in model.safetensors, the copy only makes the image larger
+rm model/pytorch_model.bin
+docker build -t pdfix/generate-alternate-text-vision:latest .
+```
+
+To use your image in PDFix Desktop, export its configuration with the `config` command and add the action to
+PDFix Desktop.
 
 ## Usage
 
