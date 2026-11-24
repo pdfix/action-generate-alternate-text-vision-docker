@@ -242,27 +242,6 @@ class GenerateAltTextsInPdf:
             logger.info(f"{struct_element.GetType(True)} keeps its alternate text: '{original_alt_text}'")
             return
 
-        # get image bbox from attributes
-        bbox: PdfRect = PdfRect()
-        for i in range(0, struct_element.GetNumAttrObjects()):
-            attr_object: Optional[PdsObject] = struct_element.GetAttrObject(i)
-            if attr_object is None:
-                continue
-            attr: PdsDictionary = PdsDictionary(attr_object.obj)
-            arr: Optional[PdsArray] = attr.GetArray("BBox")
-            if not arr:
-                continue
-            bbox.left = arr.GetNumber(0)
-            bbox.bottom = arr.GetNumber(1)
-            bbox.right = arr.GetNumber(2)
-            bbox.top = arr.GetNumber(3)
-            break
-
-        # check bounding box
-        if bbox.left == bbox.right or bbox.top == bbox.bottom:
-            logger.warning(f"[{image_name}] image found but no BBox attribute was set")
-            return
-
         # get the object page number (it may be written in child objects)
         page_num: int = struct_element.GetPageNumber(0)
         if page_num == -1:
@@ -272,6 +251,14 @@ class GenerateAltTextsInPdf:
                     break
         if page_num == -1:
             logger.warning(f"[{image_name}] image found but can't determine the page number")
+            return
+
+        # get image bbox from attributes, or from the tag content when the attribute is missing
+        bbox: PdfRect = self._attribute_bbox(struct_element)
+        if self._is_empty_bbox(bbox):
+            bbox = struct_element.GetBBox(page_num)
+        if self._is_empty_bbox(bbox):
+            logger.warning(f"[{image_name}] image found but its area on the page is empty")
             return
 
         data: bytearray = render_part_of_page(self.pdfix, self.doc, page_num, bbox, self.zoom)
@@ -287,3 +274,41 @@ class GenerateAltTextsInPdf:
             raise
         finally:
             os.remove(image_name)
+
+    def _attribute_bbox(self, struct_element: PdsStructElement) -> PdfRect:
+        """
+        Bounding box from the BBox attribute of the tag.
+
+        Args:
+            struct_element (PdsStructElement): Tag with attributes.
+
+        Returns:
+            Bounding box, empty when the tag has no BBox attribute.
+        """
+        bbox: PdfRect = PdfRect()
+        for i in range(0, struct_element.GetNumAttrObjects()):
+            attr_object: Optional[PdsObject] = struct_element.GetAttrObject(i)
+            if attr_object is None:
+                continue
+            attr: PdsDictionary = PdsDictionary(attr_object.obj)
+            arr: Optional[PdsArray] = attr.GetArray("BBox")
+            if not arr:
+                continue
+            bbox.left = arr.GetNumber(0)
+            bbox.bottom = arr.GetNumber(1)
+            bbox.right = arr.GetNumber(2)
+            bbox.top = arr.GetNumber(3)
+            break
+        return bbox
+
+    def _is_empty_bbox(self, bbox: PdfRect) -> bool:
+        """
+        Check if bounding box has no area.
+
+        Args:
+            bbox (PdfRect): Bounding box.
+
+        Returns:
+            True when width or height is zero.
+        """
+        return bbox.left == bbox.right or bbox.top == bbox.bottom
