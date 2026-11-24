@@ -239,6 +239,7 @@ class GenerateAltTextsInPdf:
         original_alt_text: str = struct_element.GetAlt()
 
         if not self.overwrite and original_alt_text:
+            logger.info(f"{struct_element.GetType(True)} keeps its alternate text: '{original_alt_text}'")
             return
 
         # get image bbox from attributes
@@ -281,6 +282,7 @@ class GenerateAltTextsInPdf:
             # Use AI to get alt description
             alt_text_by_vission: str = generate_alt_text_description(image_name, self.model_path)
             struct_element.SetAlt(alt_text_by_vission)
+            logger.info(f"{struct_element.GetType(True)} on page {page_num + 1}: '{alt_text_by_vission}'")
         except Exception:
             raise
         finally:
