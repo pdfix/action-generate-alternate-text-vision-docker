@@ -3,6 +3,7 @@ from pdfixsdk import Pdfix
 EC_ARG_GENERAL: int = 10
 EC_ARG_INPUT_MISSING: int = 11
 EC_ARG_INPUT_OUTPUT_NOT_ALLOWED: int = 12
+EC_ARG_INVALID_REGEX_OR_TEMPLATE: int = 13
 
 EC_PDFIX_INITIALIZE: int = 20
 EC_PDFIX_ACTIVATION_FAILED: int = 21
@@ -11,10 +12,12 @@ EC_PDFIX_FAILED_TO_RENDER: int = 23
 EC_PDFIX_FAILED_TO_OPEN: int = 24
 EC_PDFIX_FAILED_TO_SAVE: int = 25
 EC_PDFIX_NO_TAGS: int = 26
+EC_PDFIX_FAILED_TO_LOAD_TEMPLATE: int = 27
 
 MESSAGE_ARG_GENERAL: str = "Failed to parse arguments. Please check the usage and try again."
 MESSAGE_ARG_INPUT_MISSING: str = "Input file does not exists."
 MESSAGE_ARG_INPUT_OUTPUT_NOT_ALLOWED: str = "Not allowed input output file combination. Please see --help"
+MESSAGE_ARG_INVALID_REGEX_OR_TEMPLATE: str = "Invalid regex or template. Please check the usage and try again."
 
 MESSAGE_PDFIX_INITIALIZE: str = "Failed to initialize PDFix SDK."
 MESSAGE_PDFIX_ACTIVATION_FAILED: str = "Failed to activate PDFix SDK account."
@@ -23,6 +26,7 @@ MESSAGE_PDFIX_FAILED_TO_RENDER: str = "Failed to render PDF Page into image."
 MESSAGE_PDFIX_FAILED_TO_OPEN: str = "Failed to open PDF document."
 MESSAGE_PDFIX_FAILED_TO_SAVE: str = "Failed to save PDF document."
 MESSAGE_PDFIX_NO_TAGS: str = "PDF document has no tags."
+MESSAGE_PDFIX_FAILED_TO_LOAD_TEMPLATE: str = "Failed to load template file."
 
 
 class ExpectedException(BaseException):
@@ -48,6 +52,11 @@ class ArgumentInputMissingException(ArgumentException):
 class ArgumentInputOutputNotAllowedException(ArgumentException):
     def __init__(self) -> None:
         super().__init__(MESSAGE_ARG_INPUT_OUTPUT_NOT_ALLOWED, EC_ARG_INPUT_OUTPUT_NOT_ALLOWED)
+
+
+class InvalidRegexOrTemplateException(ArgumentException):
+    def __init__(self) -> None:
+        super().__init__(MESSAGE_ARG_INVALID_REGEX_OR_TEMPLATE, EC_ARG_INVALID_REGEX_OR_TEMPLATE)
 
 
 class PdfixInitializeException(ExpectedException):
@@ -96,3 +105,8 @@ class PdfixFailedToSaveException(PdfixException):
 class PdfixNoTagsException(PdfixException):
     def __init__(self, pdfix: Pdfix, message: str = "") -> None:
         super().__init__(pdfix, EC_PDFIX_NO_TAGS, f"{MESSAGE_PDFIX_NO_TAGS} {message}")
+
+
+class PdfixFailedToLoadTemplateException(PdfixException):
+    def __init__(self, pdfix: Pdfix, message: str = "") -> None:
+        super().__init__(pdfix, EC_PDFIX_FAILED_TO_LOAD_TEMPLATE, f"{MESSAGE_PDFIX_FAILED_TO_LOAD_TEMPLATE} {message}")

@@ -1,11 +1,13 @@
 import argparse
+import json
 import os
 import re
 import sys
+import tempfile
 import threading
 import traceback
 from pathlib import Path
-from typing import Any
+from typing import Any, Optional
 
 from constants import CONFIG_FILE, IMAGE_FILE_EXT_REGEX, SUPPORTED_IMAGE_EXT
 from exceptions import (
@@ -15,10 +17,14 @@ from exceptions import (
     ArgumentInputMissingException,
     ArgumentInputOutputNotAllowedException,
     ExpectedException,
+    InvalidRegexOrTemplateException,
 )
 from image_update import DockerImageContainerUpdateChecker
+from params_parser import ParamsParser
 from process_image import generate_alt_text_into_txt
 from process_pdf import GenerateAltTextsInPdf
+
+DEFAULT_TAGS: str = "Figure"
 
 
 def str2bool(value: Any) -> bool:
@@ -80,6 +86,13 @@ def set_arguments(
                     default=False,
                     help="Overwrite alternate text if already present in the tag",
                 )
+            case "params":
+                parser.add_argument(
+                    "--params",
+                    type=str,
+                    required=False,
+                    help="Path to JSON file with tag filter parameters (required for PDF → PDF).",
+                )
             case "zoom":
                 parser.add_argument(
                     "--zoom", type=float, default=2.0, help="Zoom level for the PDF page rendering (default: 2.0)."
@@ -108,8 +121,56 @@ def get_pdfix_config(path: str) -> None:
                 out.write(file.read())
 
 
+def resolve_regex_template(params_path: Optional[str]) -> str | Path | dict:
+    """
+    Resolve tag filter from --params (regex or template) or the default Figure regex.
+
+    Args:
+        params_path (Optional[str]): Path to params JSON, or None.
+
+    Returns:
+        Either a regex string or a template dict.
+    """
+    if not params_path:
+        return DEFAULT_TAGS
+
+    params_parser = ParamsParser(params_path)
+    params_parser.parse()
+    tag_names: Any = params_parser.params.get("tag_names")
+    if isinstance(tag_names, str):
+        return tag_names
+    if isinstance(tag_names, dict):
+        return tag_names
+    raise InvalidRegexOrTemplateException()
+
+
 def run_generate_alt_text_subcommand(args) -> None:
-    generate_alt_text(args.input, args.output, args.name, args.key, args.overwrite, args.zoom, args.model)
+    tag_filter: str | Path | dict = resolve_regex_template(getattr(args, "params", None))
+    if isinstance(tag_filter, dict):
+        with tempfile.NamedTemporaryFile(mode="w", encoding="utf-8", suffix=".json") as template_file:
+            with open(template_file.name, "w", encoding="utf-8") as template_file_write:
+                json.dump(tag_filter, template_file_write)
+            generate_alt_text(
+                args.input,
+                args.output,
+                args.name,
+                args.key,
+                args.overwrite,
+                args.zoom,
+                args.model,
+                Path(template_file.name),
+            )
+    else:
+        generate_alt_text(
+            args.input,
+            args.output,
+            args.name,
+            args.key,
+            args.overwrite,
+            args.zoom,
+            args.model,
+            tag_filter,
+        )
 
 
 def generate_alt_text(
@@ -120,6 +181,7 @@ def generate_alt_text(
     overwrite: bool,
     zoom: float,
     model_path: str,
+    regex_template: str | Path,
 ) -> None:
     """
     Run image detect and use vission to generate alternate text description for images.
@@ -132,13 +194,14 @@ def generate_alt_text(
         overwrite (bool): Overwrite alternate text if already present.
         zoom (float): Zoom level for rendering the page.
         model_path (str): Path to Vision model. Default value is "model".
+        regex_template (str | Path): Regex or path to template JSON for matching tags.
     """
     if not os.path.isfile(input_file):
         raise ArgumentInputMissingException(input_file)
 
     if input_file.lower().endswith(".pdf") and output_file.lower().endswith(".pdf"):
         processor: GenerateAltTextsInPdf = GenerateAltTextsInPdf(
-            input_file, output_file, license_name, license_key, overwrite, zoom, model_path
+            input_file, output_file, license_name, license_key, overwrite, zoom, model_path, regex_template
         )
         processor.generate_alt_texts_in_pdf()
     elif re.search(IMAGE_FILE_EXT_REGEX, input_file, re.IGNORECASE) and output_file.lower().endswith(".txt"):
@@ -175,7 +238,7 @@ def main() -> None:
     generate_alt_text_subparser = subparsers.add_parser("generate-alt-text", help=generate_alt_text_help)
     set_arguments(
         generate_alt_text_subparser,
-        ["name", "key", "input", "output", "overwrite", "zoom", "model"],
+        ["name", "key", "input", "output", "overwrite", "zoom", "model", "params"],
         True,
         "The output PDF or TXT file",
     )

@@ -14,7 +14,7 @@
                 "name": "pdfix/generate-alternate-text-vision",
                 "tag": "latest"
             },
-            "program": "docker run -v \"${working_directory}:/data\" -w /data --rm pdfix/generate-alternate-text-vision:latest generate-alt-text -i \"${input_pdf}\" -o \"/data/${output_pdf}\" --overwrite \"${overwrite}\" --zoom \"${zoom}\" --name \"${license_name}\" --key \"${license_key}\" --model /model",
+            "program": "docker run -v \"${working_directory}:/data\" -w /data --rm pdfix/generate-alternate-text-vision:latest generate-alt-text -i \"${input_pdf}\" -o \"/data/${output_pdf}\" --params \"${params}\" --overwrite \"${overwrite}\" --zoom \"${zoom}\" --name \"${license_name}\" --key \"${license_key}\" --model /model",
             "args": [
                 {
                     "name": "input_pdf",
@@ -47,17 +47,34 @@
                     "value": "2.0"
                 }
             ],
+            "params": [
+                {
+                    "title": "Tags",
+                    "desc": "Specify the tags using a ECMAScript regular expression or define them by template tag_update",
+                    "name": "tag_names",
+                    "type": "tag",
+                    "value": "Figure",
+                    "values": [
+                        {
+                            "desc": "All tags",
+                            "value": ".*"
+                        }
+                    ]
+                }
+            ],
             "errors": {
                 "10": "Failed to parse arguments. Please check the usage and try again.",
                 "11": "Input file does not exists.",
                 "12": "Not allowed input output file combination. Please see --help",
+                "13": "Invalid regex or template. Please check the usage and try again.",
                 "20": "Failed to initialize PDFix SDK.",
                 "21": "Failed to activate PDFix SDK account.",
                 "22": "Failed to authorize PDFix SDK account.",
                 "23": "Failed to render PDF Page into image.",
                 "24": "Failed to open PDF document.",
                 "25": "Failed to save PDF document.",
-                "26": "PDF document has no tags."
+                "26": "PDF document has no tags.",
+                "27": "Failed to load template file."
             },
             "progress_regex": "^(?<text>[^:]+):\\s+(?<progress>\\d{1,3})%"
         },
@@ -113,13 +130,15 @@
                 "10": "Failed to parse arguments. Please check the usage and try again.",
                 "11": "Input file does not exists.",
                 "12": "Not allowed input output file combination. Please see --help",
+                "13": "Invalid regex or template. Please check the usage and try again.",
                 "20": "Failed to initialize PDFix SDK.",
                 "21": "Failed to activate PDFix SDK account.",
                 "22": "Failed to authorize PDFix SDK account.",
                 "23": "Failed to render PDF Page into image.",
                 "24": "Failed to open PDF document.",
                 "25": "Failed to save PDF document.",
-                "26": "PDF document has no tags."
+                "26": "PDF document has no tags.",
+                "27": "Failed to load template file."
             },
             "progress_regex": "^(?<text>[^:]+):\\s+(?<progress>\\d{1,3})%"
         }

@@ -1,4 +1,5 @@
 import os
+from pathlib import Path
 from typing import Optional
 
 from pdfixsdk import (
@@ -7,19 +8,24 @@ from pdfixsdk import (
     Pdfix,
     PdfRect,
     PdfStructElemEnumProcType,
+    PdfTemplateQuery,
     PdsArray,
     PdsDictionary,
     PdsObject,
     PdsStructElement,
     PdsStructTree,
+    PsFileStream,
+    kDataFormatJson,
     kEnumNone,
     kEnumResultContinue,
     kPdsStructChildElement,
+    kPsReadOnly,
     kSaveFull,
 )
 from tqdm import tqdm
 
 from exceptions import (
+    PdfixFailedToLoadTemplateException,
     PdfixFailedToOpenException,
     PdfixFailedToSaveException,
     PdfixInitializeException,
@@ -40,6 +46,7 @@ class GenerateAltTextsInPdf:
         overwrite: bool,
         zoom: float,
         model_path: str,
+        regex_template: str | Path,
     ):
         """
         Initialize class for generating alternate text for images in a PDF document.
@@ -52,6 +59,7 @@ class GenerateAltTextsInPdf:
             overwrite (bool): Overwrite alternate text if already present.
             zoom (float): Zoom level for rendering the page.
             model_path (str): Path to Vision model. Default value is "model".
+            regex_template (str | Path): Regex or path to template JSON for matching tags.
         """
         self.input_path: str = input_path
         self.output_path: str = output_path
@@ -60,10 +68,12 @@ class GenerateAltTextsInPdf:
         self.overwrite: bool = overwrite
         self.zoom: float = zoom
         self.model_path: str = model_path
+        self.regex_template: str | Path = regex_template
 
         self.pdfix: Optional[Pdfix] = None
         self.doc: Optional[PdfDoc] = None
         self.struct_tree: Optional[PdsStructTree] = None
+        self.template_query: Optional[PdfTemplateQuery] = None
 
     def generate_alt_texts_in_pdf(self) -> None:
         """
@@ -88,6 +98,8 @@ class GenerateAltTextsInPdf:
             if self.struct_tree is None:
                 raise PdfixNoTagsException(self.pdfix)
 
+            self.template_query = self._load_template_query(self.doc)
+
             progress_bar.update(10)
             progress_bar.set_description("Processing elements")
 
@@ -99,6 +111,7 @@ class GenerateAltTextsInPdf:
                 raise
             finally:
                 self.struct_tree = None
+                self.template_query = None
 
             progress_bar.n = 95
             progress_bar.set_description("Saving document")
@@ -110,6 +123,36 @@ class GenerateAltTextsInPdf:
             progress_bar.n = 100
             progress_bar.set_description("Done")
             progress_bar.refresh()
+
+    def _load_template_query(self, doc: PdfDoc) -> PdfTemplateQuery:
+        """
+        Load a PdfTemplateQuery from a regex string or a template JSON file.
+
+        Args:
+            doc (PdfDoc): Open PDF document.
+
+        Returns:
+            Loaded template query used to test structure elements.
+        """
+        if self.pdfix is None:
+            raise PdfixInitializeException()
+
+        template_query: Optional[PdfTemplateQuery] = doc.CreateTemplateQuery()
+        if template_query is None:
+            raise PdfixFailedToLoadTemplateException(self.pdfix, "Failed to create Template query")
+
+        if isinstance(self.regex_template, str):
+            if not template_query.LoadFromRegex(self.regex_template):
+                raise PdfixFailedToLoadTemplateException(self.pdfix, "Failed to load template from regex")
+        else:
+            string_path: str = str(self.regex_template)
+            stream: Optional[PsFileStream] = self.pdfix.CreateFileStream(string_path, kPsReadOnly)
+            if stream is None:
+                raise PdfixFailedToLoadTemplateException(self.pdfix, "Failed to create file stream for template")
+            if not template_query.LoadFromStream(stream, kDataFormatJson):
+                raise PdfixFailedToLoadTemplateException(self.pdfix, "Failed to load template from stream")
+
+        return template_query
 
     def enumerate_struct_tree(self, document_pointer: int, parent_pointer: int, index: int, client_data: int) -> int:
         """
@@ -130,9 +173,14 @@ class GenerateAltTextsInPdf:
         if struct_element is None:
             return kEnumResultContinue
 
-        if struct_element.GetType(False) == "Figure":
-            self.process_image(struct_element)
+        if self.template_query is None:
+            print("Template query is not initialized")
+            return kEnumResultContinue
 
+        if not self.template_query.TestStructElement(struct_element):
+            return kEnumResultContinue
+
+        self.process_image(struct_element)
         return kEnumResultContinue
 
     def resolve_struct_element(
@@ -172,10 +220,10 @@ class GenerateAltTextsInPdf:
 
     def process_image(self, struct_element: PdsStructElement) -> None:
         """
-        For given image tag element generate alt text description using vision.
+        For given image tag element generate alt text description using Vision.
 
         Args:
-            elem (PdsStructElement): Image element to generate alt text for.
+            struct_element (PdsStructElement): Image element to generate alt text for.
         """
         element_object: Optional[PdsObject] = struct_element.GetObject()
         if element_object is None:
