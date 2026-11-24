@@ -35,7 +35,7 @@ from exceptions import (
 from logger import get_logger
 from page_renderer import describe_blank_image, render_part_of_page
 from utils_sdk import authorize_sdk
-from vision import generate_alt_text_description
+from vision import VisionCaptioner
 
 logger: logging.Logger = get_logger("app_logger")
 
@@ -83,6 +83,7 @@ class GenerateAltTextsInPdf:
         self.struct_tree: Optional[PdsStructTree] = None
         self.template_query: Optional[PdfTemplateQuery] = None
         self.matching_tags: int = 0
+        self.captioner: Optional[VisionCaptioner] = None
         self.progress_bar: Optional[tqdm] = None
         self.progress_step: float = 0.0
 
@@ -305,7 +306,7 @@ class GenerateAltTextsInPdf:
             bf.write(data)
 
         try:
-            # One colour area (white, empty frame) gets a plain description, BLIP would invent a scene
+            # One colour area (white, empty frame) gets a plain description, the model would invent a scene
             blank_description: str = describe_blank_image(image_name)
             if blank_description:
                 struct_element.SetAlt(blank_description)
@@ -313,7 +314,10 @@ class GenerateAltTextsInPdf:
                 return
 
             # Use AI to get alt description
-            alt_text_by_vission: str = generate_alt_text_description(image_name, self.model_path)
+            # Model is loaded with the first figure and used for all others
+            if self.captioner is None:
+                self.captioner = VisionCaptioner(self.model_path)
+            alt_text_by_vission: str = self.captioner.describe(image_name)
             struct_element.SetAlt(alt_text_by_vission)
             logger.info(f"{struct_element.GetType(True)} on page {page_num + 1}: '{alt_text_by_vission}'")
         except Exception:
