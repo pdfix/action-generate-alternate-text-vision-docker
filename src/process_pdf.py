@@ -227,8 +227,7 @@ class GenerateAltTextsInPdf:
 
         try:
             # Use AI to get alt description
-            response: list[str] = generate_alt_text_description(image_name, self.model_path)
-            alt_text_by_vission: str = response[0]
+            alt_text_by_vission: str = generate_alt_text_description(image_name, self.model_path)
             struct_element.SetAlt(alt_text_by_vission)
         except Exception:
             raise

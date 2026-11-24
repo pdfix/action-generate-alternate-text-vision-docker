@@ -15,8 +15,7 @@ def generate_alt_text_into_txt(input_path: str, output_path: str, model_path: st
     with tqdm(total=100) as progress_bar:
         progress_bar.set_description("Processing")
 
-        response: list[str] = generate_alt_text_description(input_path, model_path)
-        alt_text_by_vission: str = response[0]
+        alt_text_by_vission: str = generate_alt_text_description(input_path, model_path)
 
         with open(output_path, "w", encoding="utf-8") as output_file:
             output_file.write(alt_text_by_vission)
