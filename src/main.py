@@ -220,7 +220,7 @@ def main() -> None:
         description="Process a PDF file with Vission to generate alt text",
     )
 
-    subparsers = parser.add_subparsers(dest="subparser")
+    subparsers = parser.add_subparsers(title="Commands", dest="command", required=True)
 
     # Config subparser
     config_subparser = subparsers.add_parser(
