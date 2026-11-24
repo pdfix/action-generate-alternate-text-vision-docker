@@ -40,6 +40,10 @@ from vision import generate_alt_text_description
 logger: logging.Logger = get_logger("app_logger")
 
 
+# Part of the progress bar (10 % to 95 %) filled while tags are processed
+PROCESSING_PROGRESS: float = 85.0
+
+
 class GenerateAltTextsInPdf:
     def __init__(
         self,
@@ -78,6 +82,9 @@ class GenerateAltTextsInPdf:
         self.doc: Optional[PdfDoc] = None
         self.struct_tree: Optional[PdsStructTree] = None
         self.template_query: Optional[PdfTemplateQuery] = None
+        self.matching_tags: int = 0
+        self.progress_bar: Optional[tqdm] = None
+        self.progress_step: float = 0.0
 
     def generate_alt_texts_in_pdf(self) -> None:
         """
@@ -107,15 +114,22 @@ class GenerateAltTextsInPdf:
             progress_bar.update(10)
             progress_bar.set_description("Processing elements")
 
-            # Keep a local reference so the ctypes callback is not GC'd during enumeration.
+            # Keep local references so the ctypes callbacks are not GC'd during enumeration.
+            count_proc = PdfStructElemEnumProcType(self.count_matching_tags)
             enum_proc = PdfStructElemEnumProcType(self.enumerate_struct_tree)
             try:
+                # Count matching tags first (cheap, no rendering) so every tag moves the progress by the same step
+                self.matching_tags = 0
+                self.doc.EnumStructTree(None, kEnumNone, count_proc, None)
+                self.progress_bar = progress_bar
+                self.progress_step = PROCESSING_PROGRESS / self.matching_tags if self.matching_tags > 0 else 0.0
                 self.doc.EnumStructTree(None, kEnumNone, enum_proc, None)
             except Exception:
                 raise
             finally:
                 self.struct_tree = None
                 self.template_query = None
+                self.progress_bar = None
 
             progress_bar.n = 95
             progress_bar.set_description("Saving document")
@@ -184,7 +198,32 @@ class GenerateAltTextsInPdf:
         if not self.template_query.TestStructElement(struct_element):
             return kEnumResultContinue
 
-        self.process_image(struct_element)
+        try:
+            self.process_image(struct_element)
+        finally:
+            if self.progress_bar is not None:
+                self.progress_bar.update(self.progress_step)
+        return kEnumResultContinue
+
+    def count_matching_tags(self, document_pointer: int, parent_pointer: int, index: int, client_data: int) -> int:
+        """
+        Callback for struct tree enumeration that counts tags matching the tag filter.
+
+        Args:
+            document_pointer (int): Document pointer passed by PDFix SDK (unused).
+            parent_pointer (int): Parent struct element pointer, or 0 for the root.
+            index (int): Child index under the parent.
+            client_data (int): Client data pointer passed by PDFix SDK (unused).
+
+        Returns:
+            Enumeration result code; always continues to the next element.
+        """
+        struct_element: Optional[PdsStructElement] = self.resolve_struct_element(
+            self.struct_tree, parent_pointer, index
+        )
+        if struct_element is not None and self.template_query is not None:
+            if self.template_query.TestStructElement(struct_element):
+                self.matching_tags += 1
         return kEnumResultContinue
 
     def resolve_struct_element(
