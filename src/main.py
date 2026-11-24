@@ -199,6 +199,54 @@ def resolve_regex_template(params_path: Optional[str]) -> str | Path | dict:
     raise InvalidRegexOrTemplateException()
 
 
+# @KA:action pdfix_generate_alternate_text_vision
+# @KA:desc Deprecated, replaced by Set Alternate Description (BLIP AI). Writes alternate text to Figure tags of a tagged
+# PDF using the Vision (ViT + GPT-2) AI model: the area of every selected tag is rendered as an image, described in one
+# short English sentence and saved as the tag's alternate text. The input file is not changed.
+# @KA:context Use only if you already work with this action; for new work use Set Alternate Description (BLIP AI). Runs
+# locally in Docker and nothing leaves your computer.
+# @KA:param input_pdf
+# @KA:desc Tagged PDF document. It is only read, never changed.
+# @KA:param output_pdf
+# @KA:desc Where the PDF with the alternate texts is saved, a file with the `.pdf` extension in an existing folder.
+# @KA:param overwrite
+# @KA:desc When on, tags that already have alternate text get a new one. When off (default), it is kept.
+# @KA:param zoom
+# @KA:desc Zoom level used to render the area of each tag into an image, from 1.0 to 4.0 (default 2.0).
+# @KA:param tag_names
+# @KA:desc Which tags get alternate text: a regular expression of tag types (default `Figure`), or a template
+# `tag_update`.
+# @KA:logic Deprecated action
+# @KA:desc This action is deprecated: it is no longer developed and no new version is published. The local alternate
+# text generator Set Alternate Description (BLIP AI) replaces it and writes better descriptions, especially of charts,
+# logos and composite figures: https://github.com/pdfix/action-generate-alternate-text-blip-large-docker. The project of
+# this action stays available at https://github.com/pdfix/action-generate-alternate-text-vision-docker so you can see
+# how it works, build an updated image yourself or use it as a base for your own action.
+# @KA:problem The description is wrong, too general or says something the figure does not show.
+# @KA:solution The Vision model writes short general English captions and is not made for charts, diagrams and logos.
+# Use Set Alternate Description (BLIP AI) or write the alternate text manually.
+# @KA:action pdfix_generate_alternate_text_from_image_to_text_vision
+# @KA:desc Deprecated, replaced by Set Alternate Description from Image (BLIP AI). Describes an image file in one short
+# English sentence using the Vision (ViT + GPT-2) AI model and saves it to a text file.
+# @KA:context Use only if you already work with this action; for new work use Set Alternate Description from Image (BLIP
+# AI). Runs locally in Docker and nothing leaves your computer.
+# @KA:param input_jpg
+# @KA:desc Image to describe (JPG; the action also accepts JPEG, PNG and BMP).
+# @KA:param output_txt
+# @KA:desc Text file where the description is saved, a file with the `.txt` extension in an existing folder.
+# @KA:param zoom
+# @KA:desc Not used for image files.
+# @KA:param overwrite
+# @KA:desc Not used for image files; the output text file is always overwritten.
+# @KA:logic Deprecated action
+# @KA:desc This action is deprecated: it is no longer developed and no new version is published. The local alternate
+# text generator Set Alternate Description (BLIP AI) replaces it and writes better descriptions, especially of charts,
+# logos and composite figures: https://github.com/pdfix/action-generate-alternate-text-blip-large-docker. The project of
+# this action stays available at https://github.com/pdfix/action-generate-alternate-text-vision-docker so you can see
+# how it works, build an updated image yourself or use it as a base for your own action.
+# @KA:problem The description is wrong, too general or says something the figure does not show.
+# @KA:solution The Vision model writes short general English captions and is not made for charts, diagrams and logos.
+# Use Set Alternate Description (BLIP AI) or write the alternate text manually.
 def run_generate_alt_text_subcommand(args) -> None:
     output_extension: str = check_output_file(args.output)
     check_input_file(args.input, output_extension)
