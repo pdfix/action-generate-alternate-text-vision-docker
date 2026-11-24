@@ -3,6 +3,12 @@ from typing import Any
 import torch
 from PIL import Image
 from transformers import AutoTokenizer, BatchFeature, VisionEncoderDecoderModel, ViTImageProcessor
+from transformers.utils import logging as transformers_logging
+
+# Hugging Face libraries log and show their own progress bars when loading the model; keep only ours.
+# This also hides the load report of unused weights and the attention mask warning of every caption.
+transformers_logging.disable_progress_bar()
+transformers_logging.set_verbosity_error()
 
 
 def generate_alt_text_description(image_path: str, model_path: str) -> str:
