@@ -19,6 +19,7 @@ from exceptions import (
     ArgumentInputNotPdfException,
     ArgumentOutputExtensionException,
     ArgumentOutputFolderNotExistsException,
+    ArgumentZoomException,
     ExpectedException,
     InvalidRegexOrTemplateException,
 )
@@ -164,6 +165,17 @@ def check_input_file(input_path: str, output_extension: str) -> None:
         raise ArgumentInputNotImageException(input_path)
 
 
+def check_zoom(zoom: float) -> None:
+    """
+    Check the rendering zoom level.
+
+    Args:
+        zoom (float): Zoom level for rendering the page.
+    """
+    if zoom < 1.0 or zoom > 4.0:
+        raise ArgumentZoomException()
+
+
 def resolve_regex_template(params_path: Optional[str]) -> str | Path | dict:
     """
     Resolve tag filter from --params (regex or template) or the default Figure regex.
@@ -190,6 +202,7 @@ def resolve_regex_template(params_path: Optional[str]) -> str | Path | dict:
 def run_generate_alt_text_subcommand(args) -> None:
     output_extension: str = check_output_file(args.output)
     check_input_file(args.input, output_extension)
+    check_zoom(args.zoom)
 
     if output_extension == ".txt":
         generate_alt_text_into_txt(args.input, args.output, args.model)

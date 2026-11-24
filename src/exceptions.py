@@ -7,6 +7,7 @@ EC_ARG_OUTPUT_FOLDER_NOT_EXISTS: int = 13
 EC_ARG_INPUT_NOT_PDF: int = 14
 EC_ARG_INPUT_NOT_IMAGE: int = 15
 EC_ARG_OUTPUT_EXTENSION: int = 16
+EC_ARG_ZOOM: int = 17
 
 EC_PDFIX_INITIALIZE: int = 20
 EC_PDFIX_ACTIVATION_FAILED: int = 21
@@ -24,6 +25,7 @@ MESSAGE_ARG_OUTPUT_FOLDER_NOT_EXISTS: str = "Output folder does not exist."
 MESSAGE_ARG_INPUT_NOT_PDF: str = "Input file must be an existing PDF document."
 MESSAGE_ARG_INPUT_NOT_IMAGE: str = "Input file must be an existing image file (JPG, JPEG, PNG or BMP)."
 MESSAGE_ARG_OUTPUT_EXTENSION: str = "Output file must be PDF document or TXT file."
+MESSAGE_ARG_ZOOM: str = "Zoom level must be between 1.0 and 4.0."
 
 MESSAGE_PDFIX_INITIALIZE: str = "Failed to initialize PDFix SDK."
 MESSAGE_PDFIX_ACTIVATION_FAILED: str = "Failed to activate PDFix SDK account."
@@ -94,6 +96,11 @@ class ArgumentInputNotImageException(ArgumentException):
 class ArgumentOutputExtensionException(ArgumentException):
     def __init__(self) -> None:
         super().__init__(MESSAGE_ARG_OUTPUT_EXTENSION, EC_ARG_OUTPUT_EXTENSION)
+
+
+class ArgumentZoomException(ArgumentException):
+    def __init__(self) -> None:
+        super().__init__(MESSAGE_ARG_ZOOM, EC_ARG_ZOOM)
 
 
 class InvalidRegexOrTemplateException(ArgumentException):
