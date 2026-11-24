@@ -100,7 +100,7 @@ class GenerateAltTextsInPdf:
             # Enumerate struct tree
             self.struct_tree = self.doc.GetStructTree()
             if self.struct_tree is None:
-                raise PdfixNoTagsException(self.pdfix)
+                raise PdfixNoTagsException()
 
             self.template_query = self._load_template_query(self.doc)
 

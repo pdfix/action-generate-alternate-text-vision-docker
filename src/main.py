@@ -283,6 +283,8 @@ def main() -> None:
             args.func(args)
         except ExpectedException as e:
             logger.error(e.message)
+            if e.sdk_error:
+                logger.error(e.sdk_error)
             sys.exit(e.error_code)
         except Exception as e:
             # not expected exception -> print stack trace and what exception happened
