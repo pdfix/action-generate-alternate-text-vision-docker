@@ -1,3 +1,4 @@
+import logging
 import os
 from pathlib import Path
 from typing import Optional
@@ -31,9 +32,12 @@ from exceptions import (
     PdfixInitializeException,
     PdfixNoTagsException,
 )
+from logger import get_logger
 from page_renderer import render_part_of_page
 from utils_sdk import authorize_sdk
 from vision import generate_alt_text_description
+
+logger: logging.Logger = get_logger("app_logger")
 
 
 class GenerateAltTextsInPdf:
@@ -174,7 +178,7 @@ class GenerateAltTextsInPdf:
             return kEnumResultContinue
 
         if self.template_query is None:
-            print("Template query is not initialized")
+            logger.warning("Template query is not initialized")
             return kEnumResultContinue
 
         if not self.template_query.TestStructElement(struct_element):
@@ -227,7 +231,7 @@ class GenerateAltTextsInPdf:
         """
         element_object: Optional[PdsObject] = struct_element.GetObject()
         if element_object is None:
-            print("image element has no object")
+            logger.warning("image element has no object")
             return
         image_name: str = f"image_{element_object.GetId()}.jpg"
 
@@ -255,7 +259,7 @@ class GenerateAltTextsInPdf:
 
         # check bounding box
         if bbox.left == bbox.right or bbox.top == bbox.bottom:
-            print(f"[{image_name}] image found but no BBox attribute was set")
+            logger.warning(f"[{image_name}] image found but no BBox attribute was set")
             return
 
         # get the object page number (it may be written in child objects)
@@ -266,7 +270,7 @@ class GenerateAltTextsInPdf:
                 if page_num != -1:
                     break
         if page_num == -1:
-            print(f"[{image_name}] image found but can't determine the page number")
+            logger.warning(f"[{image_name}] image found but can't determine the page number")
             return
 
         data: bytearray = render_part_of_page(self.pdfix, self.doc, page_num, bbox, self.zoom)
