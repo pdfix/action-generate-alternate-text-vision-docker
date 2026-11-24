@@ -3,6 +3,7 @@ import logging
 from pathlib import Path
 from typing import Any, Optional
 
+from exceptions import ArgumentParamsException
 from logger import get_logger
 
 logger: logging.Logger = get_logger("app_logger")
@@ -23,17 +24,37 @@ class ParamsParser:
         """
         Parse the params JSON file.
         """
-        with open(self.params_json_path, "r") as file:
-            json_data: Any = json.load(file)
+        if not self.params_json_path.is_file():
+            raise ArgumentParamsException(f"Params file does not exist: {self.params_json_path.as_posix()}")
 
-            if isinstance(json_data, list):
-                for item in json_data:
-                    if isinstance(item, dict):
-                        self._parse_dictionary_item(item)
-                    else:
-                        logger.warning(f"Not expecting '{type(item)}' under list for params.")
-            else:
-                logger.warning(f"Invalid json data: {type(json_data)}")
+        try:
+            with open(self.params_json_path, "r", encoding="utf-8") as file:
+                json_data: Any = json.load(file)
+        except (json.JSONDecodeError, UnicodeDecodeError) as e:
+            raise ArgumentParamsException(f"Params file is not valid JSON: {e}")
+
+        if isinstance(json_data, list):
+            for item in json_data:
+                if isinstance(item, dict):
+                    self._parse_dictionary_item(item)
+                else:
+                    logger.error(f"Not expecting '{type(item)}' under list for params.")
+        else:
+            logger.error(f"Invalid json data: {type(json_data)}")
+
+    def get(self, name: str) -> Any:
+        """
+        Get value of a required parameter.
+
+        Args:
+            name (str): Name of the parameter.
+
+        Returns:
+            Value of the parameter.
+        """
+        if name not in self.params:
+            raise ArgumentParamsException(f"Parameter '{name}' is missing in params file.")
+        return self.params[name]
 
     def _parse_dictionary_item(self, dict_item: dict[Any, Any]) -> None:
         """
@@ -52,4 +73,4 @@ class ParamsParser:
         if item_name is not None and item_value is not None:
             self.params[item_name] = item_value
         else:
-            logger.warning(f"Invalid param: {dict_item}")
+            logger.error(f"Invalid param: {dict_item}")

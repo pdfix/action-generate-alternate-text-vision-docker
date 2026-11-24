@@ -1,7 +1,6 @@
 import argparse
 import json
 import logging
-import os
 import re
 import sys
 import tempfile
@@ -16,8 +15,10 @@ from exceptions import (
     EC_ARG_GENERAL,
     MESSAGE_ARG_GENERAL,
     ArgumentException,
-    ArgumentInputMissingException,
-    ArgumentInputOutputNotAllowedException,
+    ArgumentInputNotImageException,
+    ArgumentInputNotPdfException,
+    ArgumentOutputExtensionException,
+    ArgumentOutputFolderNotExistsException,
     ExpectedException,
     InvalidRegexOrTemplateException,
 )
@@ -126,6 +127,43 @@ def get_pdfix_config(path: str) -> None:
                 out.write(file.read())
 
 
+def check_output_file(output_path: str) -> str:
+    """
+    Check the output file extension and that its folder exists before any processing.
+
+    Args:
+        output_path (str): Path to the output PDF or TXT file.
+
+    Returns:
+        Output extension, ".pdf" or ".txt", which selects the mode.
+    """
+    extension: str = Path(output_path).suffix.lower()
+    if extension not in (".pdf", ".txt"):
+        raise ArgumentOutputExtensionException()
+
+    output_folder: Path = Path(output_path).resolve().parent
+    if not output_folder.is_dir():
+        raise ArgumentOutputFolderNotExistsException(output_folder.as_posix())
+
+    return extension
+
+
+def check_input_file(input_path: str, output_extension: str) -> None:
+    """
+    Check that the input is an existing file of the type the mode needs.
+
+    Args:
+        input_path (str): Path to the input PDF or image.
+        output_extension (str): ".pdf" for PDF to PDF, ".txt" for image to TXT.
+    """
+    path: Path = Path(input_path)
+    if output_extension == ".pdf":
+        if path.suffix.lower() != ".pdf" or not path.is_file():
+            raise ArgumentInputNotPdfException(input_path)
+    elif not re.search(IMAGE_FILE_EXT_REGEX, input_path, re.IGNORECASE) or not path.is_file():
+        raise ArgumentInputNotImageException(input_path)
+
+
 def resolve_regex_template(params_path: Optional[str]) -> str | Path | dict:
     """
     Resolve tag filter from --params (regex or template) or the default Figure regex.
@@ -141,7 +179,7 @@ def resolve_regex_template(params_path: Optional[str]) -> str | Path | dict:
 
     params_parser = ParamsParser(params_path)
     params_parser.parse()
-    tag_names: Any = params_parser.params.get("tag_names")
+    tag_names: Any = params_parser.get("tag_names")
     if isinstance(tag_names, str):
         return tag_names
     if isinstance(tag_names, dict):
@@ -150,69 +188,35 @@ def resolve_regex_template(params_path: Optional[str]) -> str | Path | dict:
 
 
 def run_generate_alt_text_subcommand(args) -> None:
+    output_extension: str = check_output_file(args.output)
+    check_input_file(args.input, output_extension)
+
+    if output_extension == ".txt":
+        generate_alt_text_into_txt(args.input, args.output, args.model)
+        return
+
     tag_filter: str | Path | dict = resolve_regex_template(getattr(args, "params", None))
     if isinstance(tag_filter, dict):
         with tempfile.NamedTemporaryFile(mode="w", encoding="utf-8", suffix=".json") as template_file:
             with open(template_file.name, "w", encoding="utf-8") as template_file_write:
                 json.dump(tag_filter, template_file_write)
-            generate_alt_text(
-                args.input,
-                args.output,
-                args.name,
-                args.key,
-                args.overwrite,
-                args.zoom,
-                args.model,
-                Path(template_file.name),
-            )
+            generate_alt_text_in_pdf(args, Path(template_file.name))
     else:
-        generate_alt_text(
-            args.input,
-            args.output,
-            args.name,
-            args.key,
-            args.overwrite,
-            args.zoom,
-            args.model,
-            tag_filter,
-        )
+        generate_alt_text_in_pdf(args, tag_filter)
 
 
-def generate_alt_text(
-    input_file: str,
-    output_file: str,
-    license_name: str,
-    license_key: str,
-    overwrite: bool,
-    zoom: float,
-    model_path: str,
-    regex_template: str | Path,
-) -> None:
+def generate_alt_text_in_pdf(args, regex_template: str | Path) -> None:
     """
-    Run image detect and use vission to generate alternate text description for images.
+    Generate alternate texts for selected tags in PDF document.
 
     Args:
-        input_file (str): Path to PDF or image.
-        output_file (str): Path to PDF or TXT.
-        license_name (str): Name used in authorization in PDFix-SDK.
-        license_key (str): Key used in authorization in PDFix-SDK.
-        overwrite (bool): Overwrite alternate text if already present.
-        zoom (float): Zoom level for rendering the page.
-        model_path (str): Path to Vision model. Default value is "model".
+        args: Parsed command line arguments.
         regex_template (str | Path): Regex or path to template JSON for matching tags.
     """
-    if not os.path.isfile(input_file):
-        raise ArgumentInputMissingException(input_file)
-
-    if input_file.lower().endswith(".pdf") and output_file.lower().endswith(".pdf"):
-        processor: GenerateAltTextsInPdf = GenerateAltTextsInPdf(
-            input_file, output_file, license_name, license_key, overwrite, zoom, model_path, regex_template
-        )
-        processor.generate_alt_texts_in_pdf()
-    elif re.search(IMAGE_FILE_EXT_REGEX, input_file, re.IGNORECASE) and output_file.lower().endswith(".txt"):
-        generate_alt_text_into_txt(input_file, output_file, model_path)
-    else:
-        raise ArgumentInputOutputNotAllowedException()
+    processor: GenerateAltTextsInPdf = GenerateAltTextsInPdf(
+        args.input, args.output, args.name, args.key, args.overwrite, args.zoom, args.model, regex_template
+    )
+    processor.generate_alt_texts_in_pdf()
 
 
 def main() -> None:

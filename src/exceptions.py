@@ -1,9 +1,12 @@
 from pdfixsdk import Pdfix
 
 EC_ARG_GENERAL: int = 10
-EC_ARG_INPUT_MISSING: int = 11
-EC_ARG_INPUT_OUTPUT_NOT_ALLOWED: int = 12
-EC_ARG_INVALID_REGEX_OR_TEMPLATE: int = 13
+EC_ARG_INVALID_REGEX_OR_TEMPLATE: int = 11
+EC_ARG_PARAMS: int = 12
+EC_ARG_OUTPUT_FOLDER_NOT_EXISTS: int = 13
+EC_ARG_INPUT_NOT_PDF: int = 14
+EC_ARG_INPUT_NOT_IMAGE: int = 15
+EC_ARG_OUTPUT_EXTENSION: int = 16
 
 EC_PDFIX_INITIALIZE: int = 20
 EC_PDFIX_ACTIVATION_FAILED: int = 21
@@ -15,9 +18,12 @@ EC_PDFIX_NO_TAGS: int = 26
 EC_PDFIX_FAILED_TO_LOAD_TEMPLATE: int = 27
 
 MESSAGE_ARG_GENERAL: str = "Failed to parse arguments. Please check the usage and try again."
-MESSAGE_ARG_INPUT_MISSING: str = "Input file does not exists."
-MESSAGE_ARG_INPUT_OUTPUT_NOT_ALLOWED: str = "Not allowed input output file combination. Please see --help"
 MESSAGE_ARG_INVALID_REGEX_OR_TEMPLATE: str = "Invalid regex or template. Please check the usage and try again."
+MESSAGE_ARG_PARAMS: str = "Missing or invalid parameters."
+MESSAGE_ARG_OUTPUT_FOLDER_NOT_EXISTS: str = "Output folder does not exist."
+MESSAGE_ARG_INPUT_NOT_PDF: str = "Input file must be an existing PDF document."
+MESSAGE_ARG_INPUT_NOT_IMAGE: str = "Input file must be an existing image file (JPG, JPEG, PNG or BMP)."
+MESSAGE_ARG_OUTPUT_EXTENSION: str = "Output file must be PDF document or TXT file."
 
 MESSAGE_PDFIX_INITIALIZE: str = "Failed to initialize PDFix SDK."
 MESSAGE_PDFIX_ACTIVATION_FAILED: str = "Failed to activate PDFix SDK account."
@@ -65,14 +71,29 @@ class ArgumentException(ExpectedException):
         self._add_note(message)
 
 
-class ArgumentInputMissingException(ArgumentException):
-    def __init__(self, message: str) -> None:
-        super().__init__(f"{MESSAGE_ARG_INPUT_MISSING} {message}", EC_ARG_INPUT_MISSING)
+class ArgumentParamsException(ArgumentException):
+    def __init__(self, detail: str) -> None:
+        super().__init__(f"{MESSAGE_ARG_PARAMS} {detail}", EC_ARG_PARAMS)
 
 
-class ArgumentInputOutputNotAllowedException(ArgumentException):
+class ArgumentOutputFolderNotExistsException(ArgumentException):
+    def __init__(self, path: str) -> None:
+        super().__init__(f"{MESSAGE_ARG_OUTPUT_FOLDER_NOT_EXISTS} {path}", EC_ARG_OUTPUT_FOLDER_NOT_EXISTS)
+
+
+class ArgumentInputNotPdfException(ArgumentException):
+    def __init__(self, path: str) -> None:
+        super().__init__(f"{MESSAGE_ARG_INPUT_NOT_PDF} {path}", EC_ARG_INPUT_NOT_PDF)
+
+
+class ArgumentInputNotImageException(ArgumentException):
+    def __init__(self, path: str) -> None:
+        super().__init__(f"{MESSAGE_ARG_INPUT_NOT_IMAGE} {path}", EC_ARG_INPUT_NOT_IMAGE)
+
+
+class ArgumentOutputExtensionException(ArgumentException):
     def __init__(self) -> None:
-        super().__init__(MESSAGE_ARG_INPUT_OUTPUT_NOT_ALLOWED, EC_ARG_INPUT_OUTPUT_NOT_ALLOWED)
+        super().__init__(MESSAGE_ARG_OUTPUT_EXTENSION, EC_ARG_OUTPUT_EXTENSION)
 
 
 class InvalidRegexOrTemplateException(ArgumentException):
