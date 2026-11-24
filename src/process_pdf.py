@@ -33,7 +33,7 @@ from exceptions import (
     PdfixNoTagsException,
 )
 from logger import get_logger
-from page_renderer import render_part_of_page
+from page_renderer import describe_blank_image, render_part_of_page
 from utils_sdk import authorize_sdk
 from vision import generate_alt_text_description
 
@@ -266,6 +266,13 @@ class GenerateAltTextsInPdf:
             bf.write(data)
 
         try:
+            # One colour area (white, empty frame) gets a plain description, BLIP would invent a scene
+            blank_description: str = describe_blank_image(image_name)
+            if blank_description:
+                struct_element.SetAlt(blank_description)
+                logger.info(f"{struct_element.GetType(True)} on page {page_num + 1}: '{blank_description}'")
+                return
+
             # Use AI to get alt description
             alt_text_by_vission: str = generate_alt_text_description(image_name, self.model_path)
             struct_element.SetAlt(alt_text_by_vission)
