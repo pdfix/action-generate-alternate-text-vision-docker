@@ -56,8 +56,8 @@
                     "value": "Figure",
                     "values": [
                         {
-                            "desc": "All tags",
-                            "value": ".*"
+                            "desc": "Figure tags",
+                            "value": "Figure"
                         }
                     ]
                 }
