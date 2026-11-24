@@ -317,9 +317,9 @@ class GenerateAltTextsInPdf:
             # Model is loaded with the first figure and used for all others
             if self.captioner is None:
                 self.captioner = VisionCaptioner(self.model_path)
-            alt_text_by_vission: str = self.captioner.describe(image_name)
-            struct_element.SetAlt(alt_text_by_vission)
-            logger.info(f"{struct_element.GetType(True)} on page {page_num + 1}: '{alt_text_by_vission}'")
+            alt_text: str = self.captioner.describe(image_name)
+            struct_element.SetAlt(alt_text)
+            logger.info(f"{struct_element.GetType(True)} on page {page_num + 1}: '{alt_text}'")
         except Exception:
             raise
         finally:

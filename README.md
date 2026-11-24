@@ -24,7 +24,7 @@ You need Docker installed. The first run downloads the image and may take longer
 Mount a folder into the container and run a subcommand:
 
 ```bash
-docker run --rm -v "$(pwd)":/data -w /data pdfix/alt-text-vision:latest <command> [options]
+docker run --rm -v "$(pwd)":/data -w /data pdfix/generate-alternate-text-vision:latest <command> [options]
 ```
 
 ## Commands
@@ -83,7 +83,7 @@ Use `"value": ".*"` to match all tags.
 Generate alternate text for figures in a PDF:
 
 ```bash
-docker run --rm -v "$(pwd)":/data -w /data pdfix/alt-text-vision:latest \
+docker run --rm -v "$(pwd)":/data -w /data pdfix/generate-alternate-text-vision:latest \
   generate-alt-text --name "${LICENSE_NAME}" --key "${LICENSE_KEY}" \
   -i /data/input.pdf -o /data/output.pdf --model /model \
   --params /data/example/params_alt_text.json
@@ -92,7 +92,7 @@ docker run --rm -v "$(pwd)":/data -w /data pdfix/alt-text-vision:latest \
 Caption a single image to a TXT file:
 
 ```bash
-docker run --rm -v "$(pwd)":/data -w /data pdfix/alt-text-vision:latest \
+docker run --rm -v "$(pwd)":/data -w /data pdfix/generate-alternate-text-vision:latest \
   generate-alt-text -i /data/image.jpg -o /data/output.txt --model /model
 ```
 

@@ -234,7 +234,7 @@ def generate_alt_text_in_pdf(args, regex_template: str | Path) -> None:
 
 def main() -> None:
     parser = argparse.ArgumentParser(
-        description="Process a PDF file with Vission to generate alt text",
+        description="Process a PDF file with Vision to generate alt text",
     )
 
     subparsers = parser.add_subparsers(title="Commands", dest="command", required=True)
