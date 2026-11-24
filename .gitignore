@@ -29,3 +29,6 @@ venv.bak/
 # Directories for model downloaded
 model
 models
+
+# Local unit tests
+tests/
