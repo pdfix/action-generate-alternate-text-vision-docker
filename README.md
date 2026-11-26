@@ -21,6 +21,8 @@ Runs locally and uses AI Vision models to describe image content in alternative 
   - [Commands](#commands)
   - [Arguments](#arguments)
   - [Params JSON](#params-json)
+  - [How it works](#how-it-works)
+  - [Exit codes](#exit-codes)
   - [Examples](#examples)
   - [Model](#model)
   - [Help \& support](#help--support)
@@ -104,6 +106,32 @@ Example (`example/params_alt_text.json`) — match `Figure` tags:
 ```
 
 Use `"value": ".*"` to match all tags.
+
+## How it works
+
+- **PDF → PDF:** every tag matching `tag_names` (default `Figure`) gets a caption of the ViT + GPT-2 model as alternate text (`Alt`). Without `--overwrite`, tags that already have alternate text keep it (the log shows the kept text).
+- **Area of a tag:** the page and area come from the tag (its `BBox` attribute, else its content); tags without them are skipped with a warning. The area is rendered at `--zoom` into `image_<id>.jpg` in the working folder and deleted after use.
+- **Blank areas:** an area of one colour gets `Blank white image`, `Blank black image` or `Blank single-color image` without calling the model.
+- **Captions** are short, English and lowercase, without a final period. The model is loaded once per run and runs offline on the CPU.
+- **Image → TXT:** the caption of the image is saved in the TXT file.
+- **Errors of one tag** (for example rendering) are logged, the tag is skipped and the next one is processed.
+- **Checks before processing:** output extension (16) and folder (13), input (14 / 15), zoom (17), params (11 / 12), then the PDFix license.
+
+## Exit codes
+
+| Code | Meaning |
+|---|---|
+| 0 | Success |
+| 1 | Unexpected error (`Failed to run the program:` + traceback) |
+| 10 | Invalid arguments or no command |
+| 11 | Invalid regex or template in `tag_names` |
+| 12 | Missing or invalid params file / parameters |
+| 13 | Output folder does not exist |
+| 14 | Input file is not an existing PDF |
+| 15 | Input file is not an existing image (JPG, JPEG, PNG or BMP) |
+| 16 | Wrong output extension (`.pdf` or `.txt`) |
+| 17 | Zoom is not between 1.0 and 4.0 |
+| 20–27 | PDFix SDK errors (20 initialize, 21 activate, 22 authorize, 23 render, 24 open, 25 save, 26 no tags, 27 load template); the SDK error is logged on its own line |
 
 ## Examples
 
