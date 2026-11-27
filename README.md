@@ -86,7 +86,7 @@ Default tag filter when `--params` is omitted: `Figure`.
 
 `tag_names` is an ECMAScript regular expression matching tag names, or a template `tag_update` object.
 
-Example (`example/params_alt_text.json`) — match `Figure` tags:
+Example (`examples/params_alt_text.json`) — match `Figure` tags:
 
 ```json
 [
@@ -143,7 +143,7 @@ Generate alternate text for figures in a PDF:
 docker run --rm -v "$(pwd)":/data -w /data pdfix/generate-alternate-text-vision:latest \
   generate-alt-text --name "${LICENSE_NAME}" --key "${LICENSE_KEY}" \
   -i /data/input.pdf -o /data/output.pdf --model /model \
-  --params /data/example/params_alt_text.json
+  --params /data/examples/params_alt_text.json
 ```
 
 Caption a single image to a TXT file:

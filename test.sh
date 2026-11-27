@@ -55,20 +55,20 @@ else
 fi
 
 info "Test #03: Run generate alternate text on tagged PDF"
-docker run --rm $PLATFORM -v $(pwd):/data -w /data $DOCKER_IMAGE generate-alt-text -i example/PDFUA-1.pdf -o $TEMPORARY_DIRECTORY/passed.pdf --model /model --params example/params_alt_text.json > /dev/null
+docker run --rm $PLATFORM -v $(pwd):/data -w /data $DOCKER_IMAGE generate-alt-text -i examples/PDFUA-1.pdf -o $TEMPORARY_DIRECTORY/passed.pdf --model /model --params examples/params_alt_text.json > /dev/null
 if [ -f "$(pwd)/$TEMPORARY_DIRECTORY/passed.pdf" ]; then
     success "passed"
 else
-    error "generate alternate text on tagged pdf failed on example/PDFUA-1.pdf"
+    error "generate alternate text on tagged pdf failed on examples/PDFUA-1.pdf"
     EXIT_STATUS=1
 fi
 
 info "Test #04: Run generate alternate text on image"
-docker run --rm $PLATFORM -v $(pwd):/data -w /data $DOCKER_IMAGE generate-alt-text -i example/image_example.jpg -o $TEMPORARY_DIRECTORY/image_example.txt --model /model > /dev/null
+docker run --rm $PLATFORM -v $(pwd):/data -w /data $DOCKER_IMAGE generate-alt-text -i examples/image_example.jpg -o $TEMPORARY_DIRECTORY/image_example.txt --model /model > /dev/null
 if [ -f "$(pwd)/$TEMPORARY_DIRECTORY/image_example.txt" ]; then
     success "passed"
 else
-    error "generate alternate text on image failed on example/image_example.jpg"
+    error "generate alternate text on image failed on examples/image_example.jpg"
     EXIT_STATUS=1
 fi
 
