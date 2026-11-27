@@ -68,6 +68,7 @@ docker run --rm -v "$(pwd)":/data -w /data pdfix/generate-alternate-text-vision:
 |---|:---:|---|---|
 | `--input`, `-i` | yes | Path to an existing `.pdf` or supported image file | Input PDF or image |
 | `--output`, `-o` | yes | Path for output `.pdf` or `.txt` (must match mode) | Output file |
+| `--password` | no | String (default: empty) | Password to open a password-protected PDF |
 | `--model` | no | Path to model directory inside the container (default: `model`); must not contain `..` | Local Vision model path |
 | `--params` | for PDF → PDF | Path to a `.json` file | Tag filter parameters (see [Params JSON](#params-json)) |
 | `--overwrite` | no | Boolean string: `true`/`false`, `yes`/`no`, `1`/`0` (default: `false`) | Overwrite existing Alt text |
@@ -132,6 +133,7 @@ Use `"value": ".*"` to match all tags.
 | 16 | Wrong output extension (`.pdf` or `.txt`) |
 | 17 | Zoom is not between 1.0 and 4.0 |
 | 20–27 | PDFix SDK errors (20 initialize, 21 activate, 22 authorize, 23 render, 24 open, 25 save, 26 no tags, 27 load template); the SDK error is logged on its own line |
+| 30 | PDF is password-protected (remove the password, or pass it with `--password`) |
 
 ## Examples
 

@@ -25,12 +25,14 @@ from pdfixsdk import (
 )
 from tqdm import tqdm
 
+from constants import SDK_ERROR_INVALID_PASSWORD
 from exceptions import (
     PdfixFailedToLoadTemplateException,
     PdfixFailedToOpenException,
     PdfixFailedToSaveException,
     PdfixInitializeException,
     PdfixNoTagsException,
+    PdfPasswordException,
 )
 from logger import get_logger
 from page_renderer import describe_blank_image, render_part_of_page
@@ -55,6 +57,7 @@ class GenerateAltTextsInPdf:
         zoom: float,
         model_path: str,
         regex_template: str | Path,
+        password: str = "",
     ):
         """
         Initialize class for generating alternate text for images in a PDF document.
@@ -68,6 +71,7 @@ class GenerateAltTextsInPdf:
             zoom (float): Zoom level for rendering the page.
             model_path (str): Path to Vision model. Default value is "model".
             regex_template (str | Path): Regex or path to template JSON for matching tags.
+            password (str): Password of the PDF document, empty when it has none.
         """
         self.input_path: str = input_path
         self.output_path: str = output_path
@@ -77,6 +81,7 @@ class GenerateAltTextsInPdf:
         self.zoom: float = zoom
         self.model_path: str = model_path
         self.regex_template: str | Path = regex_template
+        self.password: str = password
 
         self.pdfix: Optional[Pdfix] = None
         self.doc: Optional[PdfDoc] = None
@@ -101,8 +106,10 @@ class GenerateAltTextsInPdf:
             authorize_sdk(self.pdfix, self.license_name, self.license_key)
 
             # Open doc
-            self.doc = self.pdfix.OpenDoc(self.input_path, "")
+            self.doc = self.pdfix.OpenDoc(self.input_path, self.password)
             if self.doc is None:
+                if self.pdfix.GetErrorType() == SDK_ERROR_INVALID_PASSWORD:
+                    raise PdfPasswordException(self.pdfix, self.input_path)
                 raise PdfixFailedToOpenException(self.pdfix, self.input_path)
 
             # Enumerate struct tree
